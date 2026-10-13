@@ -395,21 +395,24 @@ function tileSource(k) {
     : Promise.resolve(drawPortrait(p.seed, 96)));
   return srcCache.get(key);
 }
-function tintedTile(src, W, H, p, [tL]) {
+function tintedTile(src, W, H, p, [tr, tg, tb]) {
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d', { willReadFrequently: true });
-  if (!src) { g.fillStyle = `rgb(${tL},${tL},${tL})`; g.fillRect(0, 0, W, H); return cv; }
+  if (!src) { g.fillStyle = `rgb(${tr},${tg},${tb})`; g.fillRect(0, 0, W, H); return cv; }
   const iw = src.naturalWidth || src.width, ih = src.naturalHeight || src.height;
   const s = Math.max(W / iw, H / ih) * p.zoom, w = iw * s, h = ih * s;
   g.save(); if (p.mirror) { g.translate(W, 0); g.scale(-1, 1); }
   g.drawImage(src, (W - w) * p.ox / 100, (H - h) * p.oy / 100, w, h); g.restore();
   const d = g.getImageData(0, 0, W, H), a = d.data, n = a.length / 4;
-  let sum = 0;
-  for (let i = 0; i < a.length; i += 4) sum += a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114;
-  const gain = clamp(tL / (sum / n || 1), .45, 2.4), k = .16;                       // make the tile as bright as the part of the portrait it stands in
+  let R = 0, G = 0, B = 0;
+  for (let i = 0; i < a.length; i += 4) { const y = a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114; R += y; G += y; B += y; }
+  const m = (R / n) || 1;                                                            // the tile's brightness…
+  const gr = clamp(tr / m, .45, 2.4), gg = clamp(tg / m, .45, 2.4), gb = clamp(tb / m, .45, 2.4), k = .18;   // …re-coloured to the portrait's colour there
   for (let i = 0; i < a.length; i += 4) {
-    const y = Math.min(255, (a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114) * gain) * (1 - k) + tL * k;
-    a[i] = a[i + 1] = a[i + 2] = y;
+    const y = a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114;                       // the (black & white) tile photo supplies the detail
+    a[i] = Math.min(255, y * gr) * (1 - k) + tr * k;
+    a[i + 1] = Math.min(255, y * gg) * (1 - k) + tg * k;
+    a[i + 2] = Math.min(255, y * gb) * (1 - k) + tb * k;
   }
   g.putImageData(d, 0, 0);
   return cv;
@@ -439,8 +442,7 @@ async function reveal(k, fresh = false) {
     const x1 = clamp(Math.ceil((o.x + cw - rx0) / S3), x0 + 1, sw), y1 = clamp(Math.ceil((o.y + ch - ry0) / S3), y0 + 1, sh);
     let R = 0, G = 0, B = 0, N = 0;
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = (y * sw + x) * 4; R += data[i]; G += data[i + 1]; B += data[i + 2]; N++; }
-    const L = Math.round((R * .299 + G * .587 + B * .114) / N);
-    o.target = [L, L, L];
+    o.target = [Math.round(R / N), Math.round(G / N), Math.round(B / N)];
     o.dist = Math.hypot(mx - cx0, my - cy0) / maxd;
     inCells.push(o);
   }
