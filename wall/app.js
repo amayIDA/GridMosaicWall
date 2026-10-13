@@ -280,7 +280,7 @@ function build() {
   cellByK = [...cells].sort((a, b) => a.key - b.key);
   cellByK.forEach((c, k) => { c.k = k; c.el.dataset.k = k; setFront(c); });
   wall.appendChild(track);
-  for (const k of [...revealed]) { if (k >= n) { revealed.delete(k); continue; } prepColor(cellByK[k]); cellByK[k].el.classList.add('on'); }
+  for (const k of [...revealed]) if (k >= n) revealed.delete(k);
   offset = 0; speed = 0; lastTrack = '';
 }
 
@@ -348,7 +348,7 @@ function peek() {
     decoded(prepColor(c)).then(() => {
       if (!idleOn || cl.contains('on')) return;
       flipMany([c], true); c.peeking = true;
-      setTimeout(() => { if (c.peeking && !revealed.has(c.k)) flipMany([c], false); c.peeking = false; }, 2600 + Math.random() * 2600);
+      setTimeout(() => { if (c.peeking) flipMany([c], false); c.peeking = false; }, 2600 + Math.random() * 2600);
     });
     return;
   }
@@ -361,7 +361,7 @@ function idleTick() {
 function clearPeeks() {
   const list = cells.filter(c => c.peeking);
   list.forEach(c => { c.peeking = false; });
-  flipMany(list.filter(c => !revealed.has(c.k)), false);
+  flipMany(list, false);
 }
 
 /* ───── the reveal: the wall becomes a collage of the portrait ───── */
@@ -446,7 +446,6 @@ async function reveal(k, fresh = false) {
     o.dist = Math.hypot(mx - cx0, my - cy0) / maxd;
     inCells.push(o);
   }
-  for (const o of [...inCells, c]) o.wasOn = o.el.classList.contains('on');
 
   // re-colour every tile off-screen first (in small batches so the page never stalls), so the flip itself is only a cheap transform
   const dpr = Math.min(devicePixelRatio || 1, 2), tw = Math.max(16, Math.round(cw * dpr)), th = Math.max(16, Math.round(ch * dpr));
@@ -495,8 +494,10 @@ async function reveal(k, fresh = false) {
   // 3 · the portrait dissolves, the grid returns, the tiles flip back to black & white (except theirs)
   caption.classList.remove('show'); caption.setAttribute('aria-hidden', 'true');
   portrait.classList.remove('show'); sIn.classList.remove('show'); sOut.classList.remove('show');
-  flipMany(inCells.filter(o => !o.wasOn && !revealed.has(o.k)), false, o => (1 - o.dist) * 800);
+  flipMany([...inCells, c], false, o => (1 - (o.dist === undefined ? 0 : o.dist)) * 800);
   await wait(T(2300));
+  for (const o of inCells) { if (o.el.classList.contains('on')) flipMany([o], false); }
+  await wait(T(60));
   for (const o of inCells) { if (o.cv) o.cv.remove(); o.cv = null; o.el.classList.remove('cz'); }
   brake = false; revealing = false; idleOn = true; idleTick();
 }
@@ -629,7 +630,7 @@ async function welcome(r, quiet = false) {
   if (kS !== t.k && !persons[kS].joined) { persons[kS] = persons[t.k]; refreshCell(cellByK[kS]); }
   persons[t.k] = person; t.peeking = false; refreshCell(t);
   await decoded(t.front);
-  if (quiet) { await prepAndDecode(t); revealed.add(t.k); flipMany([t], true); }
+  if (quiet) { revealed.add(t.k); }
   else await reveal(t.k, true);
   refreshEchoes();
 }
