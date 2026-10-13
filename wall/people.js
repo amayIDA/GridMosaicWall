@@ -33,7 +33,7 @@
       { name: 'Ada Lovelace', role: 'Mathematician · London', photo: 'photos/ada.jpg' },
 */
 window.MOSAIC = {
-  overlay: { src: 'overlay.png', first: 6, every: 22, hold: 3 },   // seconds: first appearance, pause between, how long the colour holds
+  overlay: { src: 'overlay.png', first: 6, every: 22, hold: 3, dim: 0.42, glow: 0.14 },   // seconds: first appearance, pause between, colour hold · dim = how dark outside the logo (0–1) · glow = how much brighter inside
   photos: { dir: 'photos/', count: 0, ext: 'jpg', start: 1 },
   people: [
     // { name: 'Ada Lovelace', role: 'Mathematician · London', photo: 'photos/ada.jpg' },

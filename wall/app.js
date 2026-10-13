@@ -218,7 +218,7 @@ function setFront(c) {
   img.className = ''; img.onerror = null;
   if (p.plain) { img.removeAttribute('src'); return; }
   if (p.tile) {
-    img.classList.add('photo');
+    img.classList.add('photo');                                                          // the front is always black & white; a submitted photo's colour is on its flipped side
     img.onerror = () => { img.onerror = null; img.classList.remove('photo'); p.tile = null; img.src = grayFor(c.k); };
     img.src = p.tile;
   } else img.src = grayFor(c.k);
@@ -230,6 +230,7 @@ function prepColor(c) {
   if (!img.getAttribute('src')) {
     img.onerror = () => { img.onerror = null; p.tile = null; img.src = drawPortrait(p.seed, 192).toDataURL('image/jpeg', .9); };
     img.src = p.tile || drawPortrait(p.seed, 192).toDataURL('image/jpeg', .9);
+    img.classList.toggle('col', !!p.joined);
     styleImg(img, p);
   }
   return img;
@@ -472,9 +473,6 @@ async function reveal(k, fresh = false) {
   portrait.style.cssText = `left:${rx0}px;top:${ry0}px;width:${rw}px;height:${rh}px`;
   const pg = portrait.getContext('2d'), W = portrait.width, H = portrait.height;
   pg.clearRect(0, 0, W, H); drawCover(pg, img, W, H, p);
-  { const id = pg.getImageData(0, 0, W, H), px = id.data;                          // black & white
-    for (let i = 0; i < px.length; i += 4) px[i] = px[i + 1] = px[i + 2] = px[i] * .299 + px[i + 1] * .587 + px[i + 2] * .114;
-    pg.putImageData(id, 0, 0); }
   pg.globalCompositeOperation = 'destination-in';                                   // feather the edges once, here, instead of masking every frame
   for (const [x1, y1] of [[W, 0], [0, H]]) {
     const f = pg.createLinearGradient(0, 0, x1, y1);
@@ -504,7 +502,7 @@ async function reveal(k, fresh = false) {
 
 /* ───── idle: the logo appears as a window of colour onto the black & white wall ─────
    wall/overlay.png is never drawn itself — only its shape is used, as a mask over colour versions of the photos behind it. */
-const OV = Object.assign({ src: 'overlay.png', every: 22, hold: 3, first: 6 }, CFG.overlay || {});
+const OV = Object.assign({ src: 'overlay.png', every: 22, hold: 3, first: 6, dim: .42, glow: .14 }, CFG.overlay || {});
 const colorLayer = $('#colorLayer');
 let ovTimer = 0, ovBusy = false, ovStarted = false;
 
@@ -528,26 +526,34 @@ function makeMask(img, W, H) {                         // the logo, fitted and c
   }
   return m;
 }
-async function renderColorLayer(img) {                 // every visible tile in colour, then cut away everything outside the logo
+async function renderColorLayer(img) {                 // colour photos inside the logo, a dimming veil everywhere else
   const vw = innerWidth, vh = innerHeight, dpr = Math.min(devicePixelRatio || 1, 1.5);
   const W = Math.round(vw * dpr), H = Math.round(vh * dpr);
   colorLayer.width = W; colorLayer.height = H;
   const g = colorLayer.getContext('2d');
+  const tiles = document.createElement('canvas'); tiles.width = W; tiles.height = H;
+  const tg = tiles.getContext('2d');
   positions();
   const vis = cells.filter(c => !persons[c.k].plain && c.x > -cw && c.y > -ch && c.x < vw && c.y < vh);
   const srcs = [];
   for (let i = 0; i < vis.length; i += 40) { srcs.push(...await Promise.all(vis.slice(i, i + 40).map(c => tileSource(c.k)))); await frame(); }
-  g.save(); g.scale(dpr, dpr);
+  tg.save(); tg.scale(dpr, dpr);
   vis.forEach((c, i) => {
     const src = srcs[i], p = persons[c.k]; if (!src) return;
     const iw = src.naturalWidth || src.width, ih = src.naturalHeight || src.height;
     const s = Math.max(cw / iw, ch / ih) * p.zoom, w = iw * s, h = ih * s;
-    g.save(); g.beginPath(); g.rect(c.x, c.y, cw, ch); g.clip();
-    g.translate(c.x, c.y); if (p.mirror) { g.translate(cw, 0); g.scale(-1, 1); }
-    g.drawImage(src, (cw - w) * p.ox / 100, (ch - h) * p.oy / 100, w, h); g.restore();
+    tg.save(); tg.beginPath(); tg.rect(c.x, c.y, cw, ch); tg.clip();
+    tg.translate(c.x, c.y); if (p.mirror) { tg.translate(cw, 0); tg.scale(-1, 1); }
+    tg.drawImage(src, (cw - w) * p.ox / 100, (ch - h) * p.oy / 100, w, h); tg.restore();
   });
-  g.restore();
-  g.globalCompositeOperation = 'destination-in'; g.drawImage(makeMask(img, W, H), 0, 0); g.globalCompositeOperation = 'source-over';
+  tg.restore();
+  const mask = makeMask(img, W, H);
+  tg.globalCompositeOperation = 'destination-in'; tg.drawImage(mask, 0, 0);          // colour photos, only inside the logo
+  g.fillStyle = 'rgba(2,2,4,' + OV.dim + ')'; g.fillRect(0, 0, W, H);                // darken everything…
+  g.globalCompositeOperation = 'destination-out'; g.drawImage(mask, 0, 0);          // …except inside the logo
+  g.globalCompositeOperation = 'source-over'; g.drawImage(tiles, 0, 0);
+  g.globalCompositeOperation = 'lighter'; g.globalAlpha = OV.glow; g.drawImage(tiles, 0, 0);   // and a touch brighter in there
+  g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
 }
 const hideOverlay = () => colorLayer.classList.remove('show');
 async function pulse() {
