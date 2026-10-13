@@ -504,11 +504,18 @@ async function reveal(k, fresh = false) {
 
 /* ───── idle: the logo appears as a window of colour onto the black & white wall ─────
    wall/overlay.png is never drawn itself — only its shape is used, as a mask over colour versions of the photos behind it. */
-const OV = Object.assign({ src: 'overlay.png', every: 22, hold: 3, first: 6, dim: .42, glow: .14 }, CFG.overlay || {});
+const OV = Object.assign({ src: ['overlays/1-ida.png'], every: 22, hold: 3, first: 6, dim: .42, glow: .14 }, CFG.overlay || {});
 const colorLayer = $('#colorLayer');
-let ovTimer = 0, ovBusy = false, ovStarted = false;
+let ovTimer = 0, ovBusy = false, ovStarted = false, ovIndex = 0;
 
-const loadOverlay = () => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = OV.src + (OV.src.includes('?') ? '&' : '?') + 't=' + Date.now(); });
+async function overlaySources() {                     // every image in wall/overlays/, falling back to the list in people.js
+  const d = await fetchJSON('/api/overlays');
+  return d && d.files && d.files.length ? d.files : [].concat(OV.src);
+}
+async function loadOverlay() {                         // the next logo in turn
+  const list = await overlaySources(), src = list[ovIndex++ % list.length];
+  return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src + (src.includes('?') ? '&' : '?') + 't=' + Date.now(); });
+}
 function hasAlpha(img) {
   const c = document.createElement('canvas'); c.width = c.height = 48;
   const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, 48, 48);
@@ -671,5 +678,5 @@ addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if 
   if (people) registered.push(...people.people);
   await boot(); connect();
 })().then(() => { const m = location.search.match(/[?&]hold=(\d+)/); if (m) setTimeout(() => window.__mosaic.reveal(+m[1]), 400); });
-window.__mosaic = { reveal: k => (queue = queue.then(() => reveal(k))), persons, join: onJoin, settings: () => S, pulse };
+window.__mosaic = { reveal: k => (queue = queue.then(() => reveal(k))), persons, join: onJoin, settings: () => S, pulse, setOverlay: i => { ovIndex = i; } };
 })();

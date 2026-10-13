@@ -199,6 +199,11 @@ const handler = (req, res) => {
     catch (e) { return send(res, 404, 'Start with start.bat to create the certificate', 'text/plain; charset=utf-8'); }
   }
   if (p === '/api/register' && req.method === 'POST') return register(req, res).catch(() => send(res, 500, { error: 'Server error' }));
+  if (p === '/api/overlays' && req.method === 'GET') {
+    let files = [];
+    try { files = fs.readdirSync(path.join(DIRS.wall, 'overlays')).filter(f => /\.(png|webp|jpe?g|svg)$/i.test(f)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).map(f => 'overlays/' + f); } catch (e) {}
+    return send(res, 200, { files });
+  }
   if (p === '/api/settings' && req.method === 'GET') return send(res, 200, config.settings);
   if (p === '/api/people' && req.method === 'GET') return send(res, 200, { people: registrations.map(publicPerson) });
   if (p === '/api/events' && req.method === 'GET') {

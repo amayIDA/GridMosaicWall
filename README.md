@@ -4,7 +4,7 @@ Two apps served by one small server. **No install needed** — `runtime\node.exe
 
 | App | Where | What it does |
 |---|---|---|
-| **Wall** | on the PC: `http://localhost:3000/` | Full-screen black & white mosaic. Every so often the logo (`wall/overlay.png`) fades in as a window of colour; when someone registers, the wall forms their portrait as a collage. |
+| **Wall** | on the PC: `http://localhost:3000/` | Full-screen black & white mosaic. Every so often a logo (from `wall/overlays/`) fades in as a window of colour; when someone registers, the wall forms their portrait as a collage. |
 | **Registration kiosk** | on the iPad: `https://<PC-IP>:3443/register/` | Just the camera (back camera by default, flip button for the front one): take a photo, tap **Put me on the wall**. No typing. |
 | **Admin** | on the PC: `http://localhost:3000/admin/` | See everyone on the wall, remove people (restorable), set the wall's **columns × rows** and background. Asks for the admin PIN. |
 
@@ -79,7 +79,7 @@ Everything is stored in the `data\` folder and survives stopping/starting the se
 - No login: use only on your own private network. Contact details are only visible on the PIN-protected admin page.
 
 ## The logo overlay
-`wall/overlay.png` is used only as a mask: every ~22 s the photos behind its shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (The one other time colour appears: a freshly submitted photo is shown in colour in the big portrait during its reveal — never on the tiles.) Replace the file to change it — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).
+The logos in `wall/overlays/` (IDA, “2026 · Proud of you”, “Proud of you”, DHA) are used only as masks, one after another: every ~22 s the photos behind the next logo's shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (The one other time colour appears: a freshly submitted photo is shown in colour in the big portrait during its reveal — never on the tiles.) Add, replace or delete PNGs in that folder to change the rotation (they play in file-name order) — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).
 
 ## Your own background faces
 Drop `1.jpg … N.jpg` in `wall/photos/` and set `photos.count` in `wall/people.js`.
