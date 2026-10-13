@@ -79,7 +79,7 @@ Everything is stored in the `data\` folder and survives stopping/starting the se
 - No login: use only on your own private network. Contact details are only visible on the PIN-protected admin page.
 
 ## The logo overlay
-The logos in `wall/overlays/` (IDA, “2026 · Proud of you”, “Proud of you”, DHA) are used only as masks, one after another: every ~22 s the photos behind the next logo's shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (The one other time colour appears: a freshly submitted photo is shown in colour in the big portrait during its reveal — never on the tiles.) Add, replace or delete PNGs in that folder to change the rotation (they play in file-name order) — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).
+The logos in `wall/overlays/` (“2026 · Proud of you”, “Proud of you”, DHA) are used only as masks, one after another: every ~22 s the photos behind the next logo's shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (The one other time colour appears: a freshly submitted photo is shown in colour in the big portrait during its reveal — never on the tiles.) Add, replace or delete PNGs in that folder to change the rotation (they play in file-name order) — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).
 
 ## Your own background faces
 Drop `1.jpg … N.jpg` in `wall/photos/` and set `photos.count` in `wall/people.js`.

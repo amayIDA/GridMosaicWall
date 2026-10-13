@@ -504,7 +504,7 @@ async function reveal(k, fresh = false) {
 
 /* ───── idle: the logo appears as a window of colour onto the black & white wall ─────
    wall/overlay.png is never drawn itself — only its shape is used, as a mask over colour versions of the photos behind it. */
-const OV = Object.assign({ src: ['overlays/1-ida.png'], every: 22, hold: 3, first: 6, dim: .42, glow: .14 }, CFG.overlay || {});
+const OV = Object.assign({ src: ['overlays/2-proud-of-you-2026.png'], every: 22, hold: 3, first: 6, dim: .42, glow: .14 }, CFG.overlay || {});
 const colorLayer = $('#colorLayer');
 let ovTimer = 0, ovBusy = false, ovStarted = false, ovIndex = 0;
 
