@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070708">
+<title>Manage the wall</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- sign in -->
+<section class="gate" id="gate">
+  <form class="gate-card" id="gateForm" autocomplete="off">
+    <div class="mark">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="2"/><rect x="11" y="1" width="8" height="8" rx="2"/><rect x="1" y="11" width="8" height="8" rx="2"/><rect class="lit" x="11" y="11" width="8" height="8" rx="2"/></svg>
+      <span>Mosaic</span>
+    </div>
+    <h1>Manage the wall</h1>
+    <p>Enter the admin PIN shown in the server window.</p>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="Admin PIN" maxlength="12" autofocus>
+    <p class="err" id="gateErr" role="alert"></p>
+    <button class="btn primary" type="submit">Continue</button>
+  </form>
+</section>
+
+<!-- manager -->
+<main class="app" id="app" hidden>
+  <header class="bar">
+    <div class="mark">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="2"/><rect x="11" y="1" width="8" height="8" rx="2"/><rect x="1" y="11" width="8" height="8" rx="2"/><rect class="lit" x="11" y="11" width="8" height="8" rx="2"/></svg>
+      <span>Mosaic</span>
+    </div>
+    <div class="bar-title"><h1>On the wall</h1><span class="count" id="count">0</span></div>
+    <div class="bar-actions">
+      <input class="search" id="search" type="search" placeholder="Search name, email, mobile" aria-label="Search">
+      <button class="btn ghost" id="csv" type="button">Export CSV</button>
+      <button class="btn ghost" id="signout" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <section class="panel" id="layout" aria-label="Wall layout">
+    <div class="panel-head"><h2>Wall layout</h2><span class="hint" id="tiles">Fits the screen</span></div>
+    <div class="ctl">
+      <div class="ctl-row">
+        <span class="ctl-name">Columns</span>
+        <input type="range" id="cols" min="3" max="60" step="1" value="20" aria-label="Columns">
+        <output id="colsOut">Auto</output>
+        <label class="auto"><input type="checkbox" id="colsAuto" checked><i></i><span>Auto</span></label>
+      </div>
+      <div class="ctl-row">
+        <span class="ctl-name">Rows</span>
+        <input type="range" id="rows" min="2" max="40" step="1" value="12" aria-label="Rows">
+        <output id="rowsOut">Auto</output>
+        <label class="auto"><input type="checkbox" id="rowsAuto" checked><i></i><span>Auto</span></label>
+      </div>
+      <div class="ctl-row">
+        <span class="ctl-name">Background</span>
+        <div class="seg" id="fill" role="radiogroup" aria-label="Background tiles">
+          <button type="button" data-v="photos" role="radio">Real photos</button>
+          <button type="button" data-v="faces" role="radio">Illustrations</button>
+          <button type="button" data-v="plain" role="radio">Empty</button>
+        </div>
+      </div>
+    </div>
+    <p class="hint" id="fillHint"></p>
+  </section>
+
+  <div class="empty" id="empty" hidden>
+    <h2>Nobody is on the wall yet.</h2>
+    <p>People appear here as soon as they register at <b>/register/</b>.</p>
+  </div>
+
+  <section class="grid" id="grid" aria-label="People on the wall"></section>
+
+  <section class="removed" id="removedWrap" hidden>
+    <button class="removed-toggle" id="removedToggle" type="button" aria-expanded="false">
+      <span>Removed</span><b id="removedCount">0</b><i aria-hidden="true"></i>
+    </button>
+    <div class="grid small" id="removedGrid" hidden></div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>

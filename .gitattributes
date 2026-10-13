@@ -1,0 +1,5 @@
+* text=auto
+*.bat text eol=crlf
+runtime/node.exe binary
+*.jpg binary
+*.png binary

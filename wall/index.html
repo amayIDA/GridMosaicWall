@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070708">
+<title>Mosaic</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<main class="stage" id="stage" aria-label="Mosaic wall of portraits">
+  <div class="wall" id="wall"></div>
+  <div class="scrim out" id="scrimOut"></div>
+  <div class="scrim in" id="scrimIn"></div>
+  <canvas class="portrait" id="portrait" aria-hidden="true"></canvas>
+</main>
+
+<aside class="caption" id="caption" aria-hidden="true">
+  <h2 id="capName"></h2>
+  <p id="capRole"></p>
+  <span class="chip" id="capPin"></span>
+</aside>
+
+<noscript><p style="position:fixed;inset:auto 0 40% 0;text-align:center;color:#999;font:15px system-ui">Mosaic needs JavaScript.</p></noscript>
+
+<script src="people.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

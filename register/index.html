@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070708">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Join the wall">
+<title>Join the wall</title>
+<link rel="stylesheet" href="register.css">
+</head>
+<body>
+
+<p class="net" id="net" role="status" hidden>Can’t reach the Mosaic server. Check the Wi‑Fi, and that <b>node server.js</b> is running on the wall PC.</p>
+
+<main class="shell" id="shell">
+  <section class="screen">
+    <div class="intro">
+      <div class="mark">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="2"/><rect x="11" y="1" width="8" height="8" rx="2"/><rect x="1" y="11" width="8" height="8" rx="2"/><rect class="lit" x="11" y="11" width="8" height="8" rx="2"/></svg>
+        <span>Mosaic</span>
+      </div>
+      <h1 id="title">Join the wall.</h1>
+    </div>
+
+    <div class="cam" id="cam" data-state="idle">
+      <video id="video" playsinline muted autoplay></video>
+      <canvas id="shot" aria-label="Your photo"></canvas>
+      <div class="count" id="count" aria-live="assertive"></div>
+      <div class="flash" id="flash"></div>
+
+      <div class="cam-msg" id="camMsg">
+        <button type="button" class="btn ghost" id="startCam">Turn on camera</button>
+        <button type="button" class="link" id="pickFile">or choose a photo</button>
+      </div>
+
+      <button type="button" class="flip" id="flipCam" aria-label="Switch camera" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>
+      </button>
+
+      <div class="cam-bar">
+        <button type="button" class="shutter" id="shutter" aria-label="Take photo"><i></i></button>
+      </div>
+      <input type="file" id="file" accept="image/*" capture="environment" hidden>
+    </div>
+
+    <div class="actions">
+      <p class="error" id="error" role="alert"></p>
+      <button class="btn primary cta" id="submit" type="button" hidden><span>Put me on the wall</span></button>
+      <button type="button" class="link" id="retake" hidden>Retake</button>
+      <p class="note-line" id="notice">Your photo will appear on the public wall.</p>
+    </div>
+  </section>
+</main>
+
+<div class="done" id="done" aria-live="polite" hidden>
+  <div class="done-card">
+    <svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 14-16"/></svg>
+    <h2 id="doneTitle">You’re on the wall.</h2>
+    <p>Look up — your portrait is forming now.</p>
+    <button type="button" class="btn ghost" id="again">Add another person</button>
+  </div>
+</div>
+
+<script src="register.js"></script>
+</body>
+</html>

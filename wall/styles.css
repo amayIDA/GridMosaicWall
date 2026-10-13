@@ -1,0 +1,73 @@
+:root{
+  --bg:#070708;
+  --ink:#f5f5f7;
+  --ink-2:rgba(245,245,247,.62);
+  --glass:rgba(34,34,37,.55);
+  --line:rgba(255,255,255,.11);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --font:"SF Pro Display","SF Pro Text",-apple-system,BlinkMacSystemFont,"Segoe UI Variable Display","Segoe UI","Helvetica Neue",system-ui,sans-serif;
+  --w:40px;--h:40px;--gap:3px;--r:3px;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden;overscroll-behavior:none;cursor:none}
+
+/* ───────── stage ───────── */
+.stage{position:fixed;inset:0;overflow:hidden;background:radial-gradient(120% 90% at 50% 40%,#18181b 0%,#070708 70%)}
+.stage::after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:radial-gradient(ellipse 85% 80% at 50% 46%,transparent 55%,rgba(0,0,0,.45) 100%)}
+
+.wall{position:absolute;inset:0;overflow:hidden}
+.track{display:flex;flex-direction:column;gap:var(--gap);width:max-content;will-change:transform}
+.row{display:flex;gap:var(--gap);flex:none}
+
+/* ───────── tile ─────────
+   At rest a tile is two plain flat images (no 3D, no extra layers).
+   The 3D flip is only switched on (.flipping) while a tile is actually turning. */
+.tile{position:relative;flex:none;width:var(--w);height:var(--h);border-radius:var(--r);contain:layout style}
+.card{position:absolute;inset:0;border-radius:inherit}
+.face{position:absolute;inset:0;border-radius:inherit;overflow:hidden;background:#1b1b1e}
+.face img,.face canvas{display:block;width:100%;height:100%;object-fit:cover;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.back{display:none}
+.tile.on .front{display:none}
+.tile.on .back{display:block}
+.front img.photo{filter:grayscale(1) contrast(1.06) brightness(.92)}
+.tile.plain .front{background:linear-gradient(160deg,#202024,#141416)}
+.tile.plain .front img{display:none}
+.tile.cz .back img{display:none}
+.back canvas{position:absolute;inset:0}
+
+.tile.flipping{perspective:700px}
+.tile.flipping .card{transform-style:preserve-3d;will-change:transform;transition:transform 1.25s cubic-bezier(.3,.75,.25,1)}
+.tile.flipping .front,.tile.flipping .back{display:block;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.tile.flipping .back{transform:rotateY(180deg)}
+.tile.flipping.on .card{transform:rotateY(180deg)}
+
+/* paper-fold shading during the intro page-flip */
+.wall.intro .front::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#000 0%,rgba(0,0,0,.2) 100%);
+  animation:fold 1s var(--d,0ms) cubic-bezier(.3,.6,.3,1) both}
+@keyframes fold{from{opacity:.95}to{opacity:0}}
+
+/* ───────── focus: two flat dimming layers instead of fading hundreds of tiles ───────── */
+.scrim{position:absolute;z-index:4;pointer-events:none;opacity:0;background:rgba(5,5,6,.74);transition:opacity .9s ease}
+.scrim.out{inset:0}
+.scrim.show{opacity:1}
+.scrim.in{transition-duration:1.6s}
+
+/* the real portrait, surfacing out of the collage (edges are feathered inside the canvas itself) */
+.portrait{position:absolute;z-index:6;pointer-events:none;opacity:0;transition:opacity 1.8s ease}
+.portrait.show{opacity:1}
+
+/* ───────── caption ───────── */
+.caption{position:fixed;z-index:16;left:50%;top:50%;pointer-events:none;text-align:center;
+  padding:16px 26px 17px;min-width:220px;border-radius:22px;
+  background:var(--glass);backdrop-filter:blur(28px) saturate(190%);-webkit-backdrop-filter:blur(28px) saturate(190%);
+  border:1px solid var(--line);box-shadow:0 24px 70px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14);
+  opacity:0;transform:translate(-50%,14px) scale(.96);transition:opacity .5s var(--ease),transform .7s var(--ease)}
+.caption.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.caption h2{font-size:22px;font-weight:600;letter-spacing:-.022em;line-height:1.15}
+.caption p{margin-top:4px;font-size:13.5px;color:var(--ink-2);letter-spacing:-.005em}
+.chip{display:inline-block;margin-top:11px;padding:3px 10px;border-radius:99px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink-2);background:rgba(255,255,255,.08)}
+
+html.fast *,html.fast *::after{transition-duration:.01s!important;transition-delay:0s!important;animation-duration:.01s!important;animation-delay:0s!important}
+@media (prefers-reduced-motion:reduce){.tile.flipping .card{transition-duration:.01s}}
