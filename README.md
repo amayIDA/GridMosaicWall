@@ -79,7 +79,7 @@ Everything is stored in the `data\` folder and survives stopping/starting the se
 - No login: use only on your own private network. Contact details are only visible on the PIN-protected admin page.
 
 ## The logo overlay
-`wall/overlay.png` is used only as a mask: every ~22 s the photos behind its shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (Photos submitted at the kiosk are the one exception to black & white: their portrait and their tile are shown in colour.) Replace the file to change it — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).
+`wall/overlay.png` is used only as a mask: every ~22 s the photos behind its shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (The one other time colour appears: a freshly submitted photo is shown in colour in the big portrait during its reveal — never on the tiles.) Replace the file to change it — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).
 
 ## Your own background faces
 Drop `1.jpg … N.jpg` in `wall/photos/` and set `photos.count` in `wall/people.js`.

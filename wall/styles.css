@@ -31,7 +31,6 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
 .tile.on .front{display:none}
 .tile.on .back{display:block}
 .front img.photo,.back img{filter:grayscale(1) contrast(1.06) brightness(.92)}
-.back img.col{filter:none}
 .tile.plain .front{background:linear-gradient(160deg,#202024,#141416)}
 .tile.plain .front img{display:none}
 .tile.cz .back img{display:none}

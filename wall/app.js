@@ -218,7 +218,7 @@ function setFront(c) {
   img.className = ''; img.onerror = null;
   if (p.plain) { img.removeAttribute('src'); return; }
   if (p.tile) {
-    img.classList.add('photo');                                                          // the front is always black & white; a submitted photo's colour is on its flipped side
+    img.classList.add('photo');                                                          // tiles are always black & white — a submitted photo is in colour only in the big portrait of its reveal
     img.onerror = () => { img.onerror = null; img.classList.remove('photo'); p.tile = null; img.src = grayFor(c.k); };
     img.src = p.tile;
   } else img.src = grayFor(c.k);
@@ -230,7 +230,6 @@ function prepColor(c) {
   if (!img.getAttribute('src')) {
     img.onerror = () => { img.onerror = null; p.tile = null; img.src = drawPortrait(p.seed, 192).toDataURL('image/jpeg', .9); };
     img.src = p.tile || drawPortrait(p.seed, 192).toDataURL('image/jpeg', .9);
-    img.classList.toggle('col', !!p.joined);
     styleImg(img, p);
   }
   return img;
