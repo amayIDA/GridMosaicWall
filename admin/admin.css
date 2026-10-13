@@ -112,6 +112,7 @@ input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:rgba
 input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:#fff}
 input[type=range]:disabled{opacity:.35;cursor:not-allowed}
 .auto{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);cursor:pointer;user-select:none}
+.auto{min-width:78px}
 .auto input{position:absolute;opacity:0;pointer-events:none}
 .auto i{width:40px;height:24px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;transition:background .25s}
 .auto i::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .3s var(--ease)}

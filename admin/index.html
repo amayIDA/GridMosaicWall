@@ -56,6 +56,12 @@
         <label class="auto"><input type="checkbox" id="rowsAuto" checked><i></i><span>Auto</span></label>
       </div>
       <div class="ctl-row">
+        <span class="ctl-name">Logo every</span>
+        <input type="range" id="ovEvery" min="5" max="180" step="1" value="22" aria-label="Seconds between logo overlays">
+        <output id="ovOut">22 s</output>
+        <label class="auto"><input type="checkbox" id="ovOff"><i></i><span>Off</span></label>
+      </div>
+      <div class="ctl-row">
         <span class="ctl-name">Background</span>
         <div class="seg" id="fill" role="radiogroup" aria-label="Background tiles">
           <button type="button" data-v="photos" role="radio">Real photos</button>

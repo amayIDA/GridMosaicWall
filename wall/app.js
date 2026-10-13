@@ -576,7 +576,13 @@ async function pulse() {
     colorLayer.classList.remove('show'); await wait(T(1800));                       // …and fades away again
   } finally { ovBusy = false; }
 }
-function overlayLoop(first) { clearTimeout(ovTimer); ovTimer = setTimeout(async () => { await pulse(); overlayLoop(); }, (first ? OV.first : OV.every) * 1000); }
+let ovGen = 0;
+function overlayLoop(first) {
+  clearTimeout(ovTimer); const gen = ++ovGen;
+  const every = S.overlayEvery !== undefined ? S.overlayEvery : OV.every;           // seconds between logos; set on the admin page, 0 = off
+  if (every === 0) return;
+  ovTimer = setTimeout(async () => { await pulse(); if (gen === ovGen) overlayLoop(); }, (first ? OV.first : every) * 1000);
+}
 
 /* ───── background faces that echo the registered people ───── */
 function refreshEchoes() {
@@ -615,7 +621,9 @@ function onRemove(id) {                                // taken off the wall fro
 
 function applySettings(next) {
   const same = ['cols', 'rows', 'fill'].every(f => S[f] === next[f]);
+  const everyChanged = next.overlayEvery !== undefined && next.overlayEvery !== S.overlayEvery;
   S = { ...S, ...next };
+  if (everyChanged && ovStarted) overlayLoop(true);                                // a new interval takes effect straight away
   if (same) return;
   queue = queue.then(async () => {                     // new grid or background: rebuild with a fresh page-flip
     while (revealing) await wait(300);

@@ -52,7 +52,7 @@ const adminPerson = r => ({ ...publicPerson(r), email: r.email, mobile: r.mobile
 let config = {};
 try { config = JSON.parse(fs.readFileSync(CONF, 'utf8')); } catch (e) {}
 if (process.env.ADMIN_PIN) config.adminPin = String(process.env.ADMIN_PIN);
-const DEFAULT_SETTINGS = { cols: 0, rows: 0, fill: 'photos' };       // 0 = fit the screen automatically
+const DEFAULT_SETTINGS = { cols: 0, rows: 0, fill: 'photos', overlayEvery: 22 };       // 0 = fit the screen automatically
 config.settings = { ...DEFAULT_SETTINGS, ...(config.settings || {}) };
 config.seq = +config.seq || 0;
 const saveConfig = () => fs.writeFileSync(CONF, JSON.stringify(config, null, 2));
@@ -143,10 +143,11 @@ async function admin(req, res, p) {
     const cols = b.cols === undefined ? config.settings.cols : int(b.cols, 3, 80);
     const rows = b.rows === undefined ? config.settings.rows : int(b.rows, 2, 60);
     const fill = b.fill === undefined ? config.settings.fill : b.fill;
-    if (cols === null || rows === null || !['photos', 'faces', 'plain'].includes(fill)) return send(res, 422, { error: 'Invalid settings' });
-    config.settings = { cols, rows, fill }; saveConfig();
+    const overlayEvery = b.overlayEvery === undefined ? config.settings.overlayEvery : int(b.overlayEvery, 5, 600);
+    if (cols === null || rows === null || overlayEvery === null || !['photos', 'faces', 'plain'].includes(fill)) return send(res, 422, { error: 'Invalid settings' });
+    config.settings = { cols, rows, fill, overlayEvery }; saveConfig();
     broadcast({ type: 'settings', settings: config.settings });
-    console.log(`~ wall layout: ${cols || 'auto'} columns x ${rows || 'auto'} rows, background: ${fill}`);
+    console.log(`~ wall layout: ${cols || 'auto'} columns x ${rows || 'auto'} rows, background: ${fill}, logo every ${overlayEvery ? overlayEvery + ' s' : '(off)'}`);
     return send(res, 200, config.settings);
   }
   if (p === '/api/admin/settings' && req.method === 'GET') return send(res, 200, config.settings);
