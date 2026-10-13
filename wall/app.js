@@ -260,7 +260,7 @@ function build() {
   root.setProperty('--w', cw.toFixed(2) + 'px'); root.setProperty('--h', ch.toFixed(2) + 'px');
   root.setProperty('--gap', gap + 'px'); root.setProperty('--r', (Math.min(cw, ch) * .06).toFixed(1) + 'px');
 
-  const per = cols + 2, n = rows * per, mx = (cols - 1) / 2, my = (rows - 1) / 2;     // two spare columns feed the leftward drift
+  const per = cols, n = rows * per, mx = (cols - 1) / 2, my = (rows - 1) / 2;
   ensurePersons(n);
   if (!appliedRegistered) { appliedRegistered = true; registered.forEach((r, i) => { if (i < persons.length) { persons[i] = joinedPerson(r); revealed.add(i); } }); }
   track = document.createElement('div'); track.className = 'track';
@@ -318,7 +318,7 @@ function intro() {
     a.onfinish = () => { c.el.style.transformOrigin = ''; };
   }
   setTimeout(() => wall.classList.remove('intro'), last + T(1150));
-  setTimeout(() => { brake = false; idleOn = true; idleTick(); }, T(2900));
+  setTimeout(() => { brake = false; idleOn = true; idleTick(); if (!ovStarted) { ovStarted = true; overlayLoop(true); } }, T(2900));
 }
 
 /* ───── flipping: 3D is only switched on for tiles that are actually turning ───── */
@@ -338,17 +338,6 @@ function flipMany(list, on, delayOf) {
 }
 
 /* ───── idle life: the wall drifts left, faces flip to colour ───── */
-let last = performance.now();
-function loop(now) {
-  const dt = Math.min(.05, (now - last) / 1000); last = now;
-  const goal = (brake || reduce) ? 0 : DRIFT;
-  speed += (goal - speed) * Math.min(1, dt * (brake ? 5 : 1.4));
-  offset += speed * dt;
-  if (offset >= pitchX) { offset -= pitchX; for (const row of rowEls) row.appendChild(row.firstElementChild); }
-  if (track) { const t = `translate3d(${(-offset).toFixed(2)}px,0,0)`; if (t !== lastTrack) { track.style.transform = t; lastTrack = t; } }
-  requestAnimationFrame(loop);
-}
-
 function peek() {
   positions();
   const vw = innerWidth, vh = innerHeight;
@@ -406,23 +395,21 @@ function tileSource(k) {
     : Promise.resolve(drawPortrait(p.seed, 96)));
   return srcCache.get(key);
 }
-function tintedTile(src, W, H, p, [tr, tg, tb]) {
+function tintedTile(src, W, H, p, [tL]) {
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const g = cv.getContext('2d', { willReadFrequently: true });
-  if (!src) { g.fillStyle = `rgb(${tr},${tg},${tb})`; g.fillRect(0, 0, W, H); return cv; }
+  if (!src) { g.fillStyle = `rgb(${tL},${tL},${tL})`; g.fillRect(0, 0, W, H); return cv; }
   const iw = src.naturalWidth || src.width, ih = src.naturalHeight || src.height;
   const s = Math.max(W / iw, H / ih) * p.zoom, w = iw * s, h = ih * s;
   g.save(); if (p.mirror) { g.translate(W, 0); g.scale(-1, 1); }
   g.drawImage(src, (W - w) * p.ox / 100, (H - h) * p.oy / 100, w, h); g.restore();
   const d = g.getImageData(0, 0, W, H), a = d.data, n = a.length / 4;
-  let R = 0, G = 0, B = 0;
-  for (let i = 0; i < a.length; i += 4) { R += a[i]; G += a[i + 1]; B += a[i + 2]; }
-  R = R / n || 1; G = G / n || 1; B = B / n || 1;
-  const gr = clamp(tr / R, .45, 2.4), gg = clamp(tg / G, .45, 2.4), gb = clamp(tb / B, .45, 2.4), k = .16;       // match the tile's average to the portrait pixel
+  let sum = 0;
+  for (let i = 0; i < a.length; i += 4) sum += a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114;
+  const gain = clamp(tL / (sum / n || 1), .45, 2.4), k = .16;                       // make the tile as bright as the part of the portrait it stands in
   for (let i = 0; i < a.length; i += 4) {
-    a[i] = Math.min(255, a[i] * gr) * (1 - k) + tr * k;
-    a[i + 1] = Math.min(255, a[i + 1] * gg) * (1 - k) + tg * k;
-    a[i + 2] = Math.min(255, a[i + 2] * gb) * (1 - k) + tb * k;
+    const y = Math.min(255, (a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114) * gain) * (1 - k) + tL * k;
+    a[i] = a[i + 1] = a[i + 2] = y;
   }
   g.putImageData(d, 0, 0);
   return cv;
@@ -431,7 +418,7 @@ function tintedTile(src, W, H, p, [tr, tg, tb]) {
 async function reveal(k, fresh = false) {
   const c = cellByK[k]; if (!c) return;
   const p = persons[k];
-  revealing = true; idleOn = false; brake = true; clearPeeks();
+  revealing = true; idleOn = false; brake = true; hideOverlay(); clearPeeks();
   const [img] = await Promise.all([loadPortrait(k), prepAndDecode(c), wait(T(700))]);
   positions();
 
@@ -452,7 +439,8 @@ async function reveal(k, fresh = false) {
     const x1 = clamp(Math.ceil((o.x + cw - rx0) / S3), x0 + 1, sw), y1 = clamp(Math.ceil((o.y + ch - ry0) / S3), y0 + 1, sh);
     let R = 0, G = 0, B = 0, N = 0;
     for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const i = (y * sw + x) * 4; R += data[i]; G += data[i + 1]; B += data[i + 2]; N++; }
-    o.target = [Math.round(R / N), Math.round(G / N), Math.round(B / N)];
+    const L = Math.round((R * .299 + G * .587 + B * .114) / N);
+    o.target = [L, L, L];
     o.dist = Math.hypot(mx - cx0, my - cy0) / maxd;
     inCells.push(o);
   }
@@ -484,6 +472,9 @@ async function reveal(k, fresh = false) {
   portrait.style.cssText = `left:${rx0}px;top:${ry0}px;width:${rw}px;height:${rh}px`;
   const pg = portrait.getContext('2d'), W = portrait.width, H = portrait.height;
   pg.clearRect(0, 0, W, H); drawCover(pg, img, W, H, p);
+  { const id = pg.getImageData(0, 0, W, H), px = id.data;                          // black & white
+    for (let i = 0; i < px.length; i += 4) px[i] = px[i + 1] = px[i + 2] = px[i] * .299 + px[i + 1] * .587 + px[i + 2] * .114;
+    pg.putImageData(id, 0, 0); }
   pg.globalCompositeOperation = 'destination-in';                                   // feather the edges once, here, instead of masking every frame
   for (const [x1, y1] of [[W, 0], [0, H]]) {
     const f = pg.createLinearGradient(0, 0, x1, y1);
@@ -510,6 +501,67 @@ async function reveal(k, fresh = false) {
   for (const o of inCells) { if (o.cv) o.cv.remove(); o.cv = null; o.el.classList.remove('cz'); }
   brake = false; revealing = false; idleOn = true; idleTick();
 }
+
+/* ───── idle: the logo appears as a window of colour onto the black & white wall ─────
+   wall/overlay.png is never drawn itself — only its shape is used, as a mask over colour versions of the photos behind it. */
+const OV = Object.assign({ src: 'overlay.png', every: 22, hold: 3, first: 6 }, CFG.overlay || {});
+const colorLayer = $('#colorLayer');
+let ovTimer = 0, ovBusy = false, ovStarted = false;
+
+const loadOverlay = () => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = OV.src + (OV.src.includes('?') ? '&' : '?') + 't=' + Date.now(); });
+function hasAlpha(img) {
+  const c = document.createElement('canvas'); c.width = c.height = 48;
+  const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(img, 0, 0, 48, 48);
+  const d = g.getImageData(0, 0, 48, 48).data;
+  for (let i = 3; i < d.length; i += 4) if (d[i] < 250) return true;
+  return false;
+}
+function makeMask(img, W, H) {                         // the logo, fitted and centred, as an alpha mask
+  const m = document.createElement('canvas'); m.width = W; m.height = H;
+  const g = m.getContext('2d', { willReadFrequently: true });
+  const iw = img.naturalWidth, ih = img.naturalHeight, s = Math.min(W * .84 / iw, H * .84 / ih), w = iw * s, h = ih * s;
+  g.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+  if (!hasAlpha(img)) {                                // an opaque image: treat its light background as empty
+    const id = g.getImageData(0, 0, W, H), d = id.data;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3]) d[i + 3] = Math.min(255, Math.max(0, 255 - Math.min(d[i], d[i + 1], d[i + 2])) * 1.4);
+    g.putImageData(id, 0, 0);
+  }
+  return m;
+}
+async function renderColorLayer(img) {                 // every visible tile in colour, then cut away everything outside the logo
+  const vw = innerWidth, vh = innerHeight, dpr = Math.min(devicePixelRatio || 1, 1.5);
+  const W = Math.round(vw * dpr), H = Math.round(vh * dpr);
+  colorLayer.width = W; colorLayer.height = H;
+  const g = colorLayer.getContext('2d');
+  positions();
+  const vis = cells.filter(c => !persons[c.k].plain && c.x > -cw && c.y > -ch && c.x < vw && c.y < vh);
+  const srcs = [];
+  for (let i = 0; i < vis.length; i += 40) { srcs.push(...await Promise.all(vis.slice(i, i + 40).map(c => tileSource(c.k)))); await frame(); }
+  g.save(); g.scale(dpr, dpr);
+  vis.forEach((c, i) => {
+    const src = srcs[i], p = persons[c.k]; if (!src) return;
+    const iw = src.naturalWidth || src.width, ih = src.naturalHeight || src.height;
+    const s = Math.max(cw / iw, ch / ih) * p.zoom, w = iw * s, h = ih * s;
+    g.save(); g.beginPath(); g.rect(c.x, c.y, cw, ch); g.clip();
+    g.translate(c.x, c.y); if (p.mirror) { g.translate(cw, 0); g.scale(-1, 1); }
+    g.drawImage(src, (cw - w) * p.ox / 100, (ch - h) * p.oy / 100, w, h); g.restore();
+  });
+  g.restore();
+  g.globalCompositeOperation = 'destination-in'; g.drawImage(makeMask(img, W, H), 0, 0); g.globalCompositeOperation = 'source-over';
+}
+const hideOverlay = () => colorLayer.classList.remove('show');
+async function pulse() {
+  if (ovBusy || !idleOn || revealing || document.hidden || !cells.length) return;
+  ovBusy = true;
+  try {
+    const img = await loadOverlay(); if (!img) return;
+    await renderColorLayer(img);
+    if (!idleOn || revealing) return;
+    colorLayer.classList.add('show'); await wait(T(1700 + OV.hold * 1000));        // colour fades in through the logo, holds…
+    colorLayer.classList.remove('show'); await wait(T(1800));                       // …and fades away again
+  } finally { ovBusy = false; }
+}
+function overlayLoop(first) { clearTimeout(ovTimer); ovTimer = setTimeout(async () => { await pulse(); overlayLoop(); }, (first ? OV.first : OV.every) * 1000); }
 
 /* ───── background faces that echo the registered people ───── */
 function refreshEchoes() {
@@ -605,12 +657,11 @@ wall.addEventListener('click', e => {
 let rt = 0;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (!revealing) { build(); } }, 250); });
 
-requestAnimationFrame(loop);
 (async () => {
   const [people, set] = await Promise.all([fetchJSON('/api/people'), fetchJSON('/api/settings')]);
   if (set) S = { ...S, ...set };
   if (people) registered.push(...people.people);
   await boot(); connect();
 })().then(() => { const m = location.search.match(/[?&]hold=(\d+)/); if (m) setTimeout(() => window.__mosaic.reveal(+m[1]), 400); });
-window.__mosaic = { reveal: k => (queue = queue.then(() => reveal(k))), persons, join: onJoin, settings: () => S };
+window.__mosaic = { reveal: k => (queue = queue.then(() => reveal(k))), persons, join: onJoin, settings: () => S, pulse };
 })();

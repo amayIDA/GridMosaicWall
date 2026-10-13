@@ -4,7 +4,7 @@ Two apps served by one small server. **No install needed** — `runtime\node.exe
 
 | App | Where | What it does |
 |---|---|---|
-| **Wall** | on the PC: `http://localhost:3000/` | Full-screen mosaic. When someone registers, the wall forms their portrait as a collage and their tile stays in colour. |
+| **Wall** | on the PC: `http://localhost:3000/` | Full-screen black & white mosaic. Every so often the logo (`wall/overlay.png`) fades in as a window of colour; when someone registers, the wall forms their portrait as a collage. |
 | **Registration kiosk** | on the iPad: `https://<PC-IP>:3443/register/` | Just the camera (back camera by default, flip button for the front one): take a photo, tap **Put me on the wall**. No typing. |
 | **Admin** | on the PC: `http://localhost:3000/admin/` | See everyone on the wall, remove people (restorable), set the wall's **columns × rows** and background. Asks for the admin PIN. |
 
@@ -77,6 +77,9 @@ Everything is stored in the `data\` folder and survives stopping/starting the se
 - Registered people reload in colour after a restart, from the centre of the wall outwards.
 - `certs\ca.key` is the private key for your local authority — keep it on the PC.
 - No login: use only on your own private network. Contact details are only visible on the PIN-protected admin page.
+
+## The logo overlay
+`wall/overlay.png` is used only as a mask: every ~22 s the photos behind its shape fade into colour (everything else stays black & white) and then fade out. Replace the file to change it — no restart needed. Timing is in `wall/people.js` (`overlay: { first, every, hold }`, in seconds).
 
 ## Your own background faces
 Drop `1.jpg … N.jpg` in `wall/photos/` and set `photos.count` in `wall/people.js`.

@@ -30,7 +30,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
 .back{display:none}
 .tile.on .front{display:none}
 .tile.on .back{display:block}
-.front img.photo{filter:grayscale(1) contrast(1.06) brightness(.92)}
+.front img.photo,.back img{filter:grayscale(1) contrast(1.06) brightness(.92)}
 .tile.plain .front{background:linear-gradient(160deg,#202024,#141416)}
 .tile.plain .front img{display:none}
 .tile.cz .back img{display:none}
@@ -46,6 +46,10 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
 .wall.intro .front::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#000 0%,rgba(0,0,0,.2) 100%);
   animation:fold 1s var(--d,0ms) cubic-bezier(.3,.6,.3,1) both}
 @keyframes fold{from{opacity:.95}to{opacity:0}}
+
+/* colour seen only through the logo, fading in and out over the black & white wall */
+.colorlayer{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.7s ease}
+.colorlayer.show{opacity:1}
 
 /* ───────── focus: two flat dimming layers instead of fading hundreds of tiles ───────── */
 .scrim{position:absolute;z-index:4;pointer-events:none;opacity:0;background:rgba(5,5,6,.74);transition:opacity .9s ease}
