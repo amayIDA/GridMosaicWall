@@ -5,7 +5,6 @@ const CFG = Object.assign({ people: [] }, window.MOSAIC || {});
 const PH = Object.assign({ dir: 'photos/', count: 0, ext: 'jpg', start: 1 }, CFG.photos || {});
 const $ = s => document.querySelector(s);
 const stage = $('#stage'), wall = $('#wall'), portrait = $('#portrait');
-const caption = $('#caption'), capName = $('#capName'), capRole = $('#capRole'), capPin = $('#capPin');
 
 const HOLD = /[?&]hold(=|&|$)/.test(location.search);            // dev aid: ?hold jumps to the portrait state and stays there
 const reduce = HOLD || matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -418,10 +417,54 @@ function tintedTile(src, W, H, p, [tr, tg, tb]) {
   return cv;
 }
 
+/* ───── "something is happening": before a new portrait is revealed, a gradient and a grid of scanning faces sweep over the wall ─────
+   Everything is sized from the wall's own tiles and the screen, so it looks the same on any screen shape or grid. */
+const fxEl = $('#fx'), fxCanvas = $('#fxCanvas');
+let fxIconP = null;
+const loadFxIcon = () => fxIconP || (fxIconP = new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'fx/scan-icon.png'; }));
+
+async function playFx() {                              // resolves once it has faded away again
+  if (reduce) return;
+  const icon = await loadFxIcon();
+  positions();
+  const vw = innerWidth, vh = innerHeight, dpr = Math.min(devicePixelRatio || 1, 1.5);
+  fxCanvas.width = Math.round(vw * dpr); fxCanvas.height = Math.round(vh * dpr);
+  const g = fxCanvas.getContext('2d');
+  const tiles = cells.filter(c => c.x > -cw && c.y > -ch && c.x < vw && c.y < vh);
+  const isz = Math.min(cw, ch) * .64;
+  const IN = 1000, HOLD_MS = 2800, OUT = 1200;
+  fxEl.classList.add('run'); void fxEl.offsetWidth; fxEl.classList.add('show');           // the gradient layers fade in through CSS
+  const t0 = performance.now();
+  await new Promise(res => {
+    let leaving = false;
+    const step = now => {
+      const t = now - t0;
+      const env = t < IN ? t / IN : t < IN + HOLD_MS ? 1 : Math.max(0, 1 - (t - IN - HOLD_MS) / OUT);
+      if (!leaving && t >= IN + HOLD_MS) { leaving = true; fxEl.classList.remove('show'); }
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, fxCanvas.width, fxCanvas.height); g.scale(dpr, dpr);
+      g.globalAlpha = .3 * env; g.strokeStyle = '#fff'; g.lineWidth = 1; g.beginPath();      // the grid
+      for (const c of tiles) g.rect(c.x + .5, c.y + .5, cw, ch);
+      g.stroke();
+      const s = t / 1000;
+      for (const c of tiles) {                         // a face-scan icon in every tile, brightening in a diagonal wave
+        const cx = c.x + cw / 2, cy = c.y + ch / 2;
+        const wave = .5 + .5 * Math.sin(((cx / vw) * .75 + (cy / vh) * .55) * 2.6 * Math.PI * 2 - s * 1.5 * Math.PI * 2);
+        g.globalAlpha = env * (.3 + .5 * wave);
+        g.drawImage(icon, cx - isz / 2, cy - isz / 2, isz, isz);
+      }
+      if (t < IN + HOLD_MS + OUT) requestAnimationFrame(step); else res();
+    };
+    requestAnimationFrame(step);
+  });
+  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+  fxEl.classList.remove('run');
+}
+
 async function reveal(k, fresh = false) {
   const c = cellByK[k]; if (!c) return;
   const p = persons[k];
   revealing = true; idleOn = false; brake = true; hideOverlay(); clearPeeks();
+  const fx = fresh ? playFx() : Promise.resolve();                                    // a brand-new submission gets the gradient effect first
   const [img] = await Promise.all([loadPortrait(k), prepAndDecode(c), wait(T(700))]);
   positions();
 
@@ -464,6 +507,7 @@ async function reveal(k, fresh = false) {
   sOut.style.clipPath = `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${rx0}px ${ry0}px,${rx0 + rw}px ${ry0}px,${rx0 + rw}px ${ry0 + rh}px,${rx0}px ${ry0 + rh}px,${rx0}px ${ry0}px)`;
   sIn.style.cssText = `left:${rx0}px;top:${ry0}px;width:${rw}px;height:${rh}px`;
   await frame();
+  await fx;                                                                            // the gradient has to be gone before the portrait appears
   sOut.classList.add('show');
   flipMany([...inCells, c], true, o => (o.dist || 0) * 1300);
   await wait(T(2500));
@@ -485,14 +529,10 @@ async function reveal(k, fresh = false) {
   revealed.add(k);
 
   await wait(T(1300));
-  capName.textContent = p.name; capRole.textContent = p.role || 'Welcome to the wall'; capPin.textContent = fresh ? 'Just joined' : 'On the wall';
-  caption.style.left = vw / 2 + 'px'; caption.style.top = (ry0 + rh + 10) + 'px';
-  caption.classList.add('show'); caption.setAttribute('aria-hidden', 'false');
   if (HOLD) return;
   await wait(T(4200));
 
   // 3 · the portrait dissolves, the grid returns, the tiles flip back to black & white (except theirs)
-  caption.classList.remove('show'); caption.setAttribute('aria-hidden', 'true');
   portrait.classList.remove('show'); sIn.classList.remove('show'); sOut.classList.remove('show');
   flipMany([...inCells, c], false, o => (1 - (o.dist === undefined ? 0 : o.dist)) * 800);
   await wait(T(2300));
