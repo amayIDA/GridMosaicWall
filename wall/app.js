@@ -416,16 +416,21 @@ function tintedTile(src, W, H, p, [tr, tg, tb]) {
   return cv;
 }
 
-/* ───── "something is happening": before a new portrait is revealed, a gradient drifts over the wall's photos, then fades away ───── */
+/* ───── before a new portrait is revealed, the artwork in wall/fx/reveal.jpg fades smoothly in over the wall (2 s), holds a moment, and fades out ───── */
 const fxEl = $('#fx');
+const FX_IN = 2000, FX_HOLD = 1200, FX_OUT = 1200;
+let fxReady = null;
+const loadFx = () => fxReady || (fxReady = new Promise(res => { const im = new Image(); im.onload = () => (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(res); im.onerror = res; im.src = 'fx/reveal.jpg'; }));
 async function playFx() {                              // resolves once it has faded away again
   if (reduce) return;
-  fxEl.classList.add('run'); void fxEl.offsetWidth; fxEl.classList.add('show');          // fade in (CSS)…
-  await wait(1000 + 2800);                                                              // …drift for a moment…
-  fxEl.classList.remove('show');                                                        // …and fade away
-  await wait(1200);
+  await loadFx();                                      // decoded first, so the fade is never a pop
+  fxEl.classList.add('run'); void fxEl.offsetWidth; fxEl.classList.add('show');          // 2 s fade in (CSS)…
+  await wait(FX_IN + FX_HOLD);
+  fxEl.classList.remove('show');                                                        // …and a fade out
+  await wait(FX_OUT);
   fxEl.classList.remove('run');
 }
+loadFx();                                              // warm the cache while the wall is idle
 
 async function reveal(k, fresh = false) {
   const c = cellByK[k]; if (!c) return;
@@ -474,7 +479,7 @@ async function reveal(k, fresh = false) {
   sOut.style.clipPath = `polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,${rx0}px ${ry0}px,${rx0 + rw}px ${ry0}px,${rx0 + rw}px ${ry0 + rh}px,${rx0}px ${ry0 + rh}px,${rx0}px ${ry0}px)`;
   sIn.style.cssText = `left:${rx0}px;top:${ry0}px;width:${rw}px;height:${rh}px`;
   await frame();
-  await fx;                                                                            // the gradient has to be gone before the portrait appears
+  await fx;                                                                            // the artwork has to be gone before the portrait appears
   sOut.classList.add('show');
   flipMany([...inCells, c], true, o => (o.dist || 0) * 1300);
   await wait(T(2500));

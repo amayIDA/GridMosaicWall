@@ -79,8 +79,8 @@ Everything is stored in the `data\` folder and survives stopping/starting the se
 - `certs\ca.key` is the private key for your local authority — keep it on the PC.
 - No login: use only on your own private network. Contact details are only visible on the PIN-protected admin page.
 
-## The "something is happening" effect
-When a new photo is submitted, the wall first plays a short effect: a teal-to-navy gradient (from the `mosaic.ai` artwork) drifts over the wall's photos — which stay faintly visible through it — then fades away, and only then is the portrait revealed. It stretches to any screen shape. The asset is `wall/fx/gradient.jpg`. No names are shown during a reveal.
+## The reveal artwork
+When a new photo is submitted, the artwork in `wall/fx/reveal.jpg` fades smoothly in over the whole wall (2 seconds), holds for a moment, and fades out — and only then is the portrait revealed. It fills the screen at any size (centred, cropped to fit). To change it, replace that file (any JPG or PNG saved under that name; widescreen 16:10 or 16:9 works best). No names are shown during a reveal.
 
 ## The logo spotlight
 The logos in `wall/overlays/` (“2026 · Proud of you”, “Proud of you”, DHA) are used only as shapes, one after another: every ~22 s the wall dims everywhere except inside the next logo's shape, where the photos are lifted — brighter, a touch more vivid, with a soft glow around the edge — and a sheen sweeps across it before it all fades away. Add, replace or delete PNGs in that folder to change the rotation (they play in file-name order) — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`; `dim` is how dark the rest of the wall gets, 0–1).

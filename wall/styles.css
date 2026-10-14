@@ -62,15 +62,12 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
 .scrim.show{opacity:1}
 .scrim.in{transition-duration:1.6s}
 
-/* the "something is happening" effect: a gradient (from mosaic.ai) drifting over the wall's photos */
-.fx{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;display:none;transition:opacity 1.2s ease}
+/* the reveal artwork (wall/fx/reveal.jpg): fills the screen at any size, 2 s smooth fade in, 1.2 s fade out */
+.fx{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;display:none;
+  background:#06303f url(fx/reveal.jpg) center / cover no-repeat;
+  transition:opacity 1.2s cubic-bezier(.37,0,.63,1)}
 .fx.run{display:block}
-.fx.show{opacity:1;transition-duration:1s}
-.fx .g{position:absolute;left:-25%;top:-25%;width:150%;height:150%;background:url(fx/gradient.jpg) center / cover no-repeat;will-change:transform}
-.fx .a{opacity:.62;animation:fxA 6s ease-in-out infinite alternate}
-.fx .b{opacity:.32;animation:fxB 7.5s ease-in-out infinite alternate}
-@keyframes fxA{from{transform:translate(-5%,-4%) scale(1) rotate(-2deg)}to{transform:translate(5%,4%) scale(1.18) rotate(3deg)}}
-@keyframes fxB{from{transform:translate(7%,5%) scale(1.3) rotate(3deg)}to{transform:translate(-7%,-5%) scale(1.05) rotate(-4deg)}}
+.fx.show{opacity:1;transition-duration:2s;transition-timing-function:cubic-bezier(.37,0,.63,1)}
 
 /* the real portrait, surfacing out of the collage (edges are feathered inside the canvas itself) */
 .portrait{position:absolute;z-index:6;pointer-events:none;opacity:0;transition:opacity 1.8s ease}
