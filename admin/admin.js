@@ -4,7 +4,7 @@ const $ = s => document.querySelector(s);
 const gate = $('#gate'), gateForm = $('#gateForm'), pinEl = $('#pin'), gateErr = $('#gateErr');
 const app = $('#app'), grid = $('#grid'), countEl = $('#count'), emptyEl = $('#empty'), search = $('#search');
 const removedWrap = $('#removedWrap'), removedGrid = $('#removedGrid'), removedCount = $('#removedCount'), removedToggle = $('#removedToggle');
-const toast = $('#toast');
+const toast = $('#toast'), removeAllBtn = $('#removeAll');
 const colsEl = $('#cols'), rowsEl = $('#rows'), colsAuto = $('#colsAuto'), rowsAuto = $('#rowsAuto'), colsOut = $('#colsOut'), rowsOut = $('#rowsOut'), fillEl = $('#fill'), tilesEl = $('#tiles'), fillHint = $('#fillHint'), ovEvery = $('#ovEvery'), ovOut = $('#ovOut'), ovOff = $('#ovOff'), holdEl = $('#hold'), holdOut = $('#holdOut');
 
 let token = sessionStorage.getItem('mosaic-admin') || '';
@@ -85,6 +85,7 @@ function render() {
   countEl.textContent = people.length + (shown.length !== people.length ? ` · ${shown.length} shown` : '');
   grid.replaceChildren(...shown.map(p => card(p, 'live')));
   emptyEl.hidden = people.length > 0;
+  removeAllBtn.disabled = people.length === 0;
   removedWrap.hidden = removed.length === 0;
   removedCount.textContent = removed.length;
   if (!removedToggle.getAttribute('aria-expanded') || removedToggle.getAttribute('aria-expanded') === 'true') removedGrid.replaceChildren(...removed.filter(matches).map(p => card(p, 'removed')));
@@ -159,6 +160,25 @@ async function purge(p) {
   if (!res.ok) return say('Couldn’t delete that person.');
   blobs.delete(p.id); refresh(); say(`${p.name} deleted permanently`);
 }
+
+/* Remove all: first tap arms it (and says how many), the second tap does it. Everyone can be restored. */
+let allTimer = 0;
+removeAllBtn.addEventListener('click', async () => {
+  if (!removeAllBtn.classList.contains('confirm')) {
+    removeAllBtn.classList.add('confirm'); removeAllBtn.textContent = `Tap again: remove all ${people.length}`;
+    clearTimeout(allTimer); allTimer = setTimeout(() => { removeAllBtn.classList.remove('confirm'); removeAllBtn.textContent = 'Remove all'; }, 3500);
+    return;
+  }
+  clearTimeout(allTimer); removeAllBtn.classList.remove('confirm'); removeAllBtn.textContent = 'Remove all';
+  const gone = people.slice();
+  const res = await api('/api/admin/removeall', { method: 'POST' });
+  if (!res.ok) return say('Couldn’t remove everyone.');
+  await refresh();
+  say(`${gone.length} removed from the wall`, async () => {            // Undo puts them all back
+    for (const p of gone) await api('/api/admin/restore/' + p.id, { method: 'POST' });
+    refresh(); say(`${gone.length} back on the wall`);
+  });
+});
 
 $('#csv').addEventListener('click', () => {
   const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';

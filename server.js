@@ -153,6 +153,17 @@ async function admin(req, res, p) {
     return send(res, 200, config.settings);
   }
   if (p === '/api/admin/settings' && req.method === 'GET') return send(res, 200, config.settings);
+  if (p === '/api/admin/removeall' && req.method === 'POST') {          // take everyone off the wall at once (restorable)
+    const gone = registrations.splice(0, registrations.length), at = new Date().toISOString();
+    for (const rec of gone) {
+      try { fs.renameSync(path.join(PHOTOS, rec.id + '.jpg'), path.join(REMOVED_DIR, rec.id + '.jpg')); } catch (e) {}
+      removed.push({ ...rec, removedAt: at });
+    }
+    store(RDB, removed); store(DB, registrations);
+    for (const rec of gone) broadcast({ type: 'remove', id: rec.id });
+    console.log(`- everyone removed from the wall (${gone.length})`);
+    return send(res, 200, { ok: true, removed: gone.map(r => r.id) });
+  }
   const parts = p.split('/').filter(Boolean);                            // ['api','admin',action,id]
   const action = parts[2], id = parts[3];
 
