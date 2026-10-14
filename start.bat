@@ -1,5 +1,5 @@
 @echo off
-rem Starts the Mosaic server and opens the wall full-screen on this PC.
+rem Starts the Mosaic server and opens the wall in your default browser.
 rem Uses the bundled runtime\node.exe, so Node.js does not need to be installed.
 cd /d "%~dp0"
 set "NODE=node"
@@ -16,9 +16,6 @@ rem Refresh the https certificate for this PC's current IP address (the iPad kee
 
 start "Mosaic server (keep this window open)" cmd /k %NODE% server.js
 timeout /t 3 >nul
-if exist "%ProgramFiles%\Google\Chrome\Application\chrome.exe" (
-  start "" "%ProgramFiles%\Google\Chrome\Application\chrome.exe" --kiosk --autoplay-policy=no-user-gesture-required http://localhost:3000/
-) else (
-  start "" msedge --kiosk http://localhost:3000/ --edge-kiosk-type=fullscreen
-)
-rem Exit the full-screen wall with Alt+F4. The iPad addresses are printed in the server window.
+start "" http://localhost:3000/
+rem Press F11 in the browser for full screen. The admin page is at http://localhost:3000/admin/ (or run admin.bat).
+rem The iPad addresses and the admin PIN are printed in the server window.

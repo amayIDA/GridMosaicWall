@@ -25,7 +25,7 @@ Your registrations live in `data\` and are **not** in the repo (they hold person
 
 ## Run it (every time)
 
-Double-click **`start.bat`**. It refreshes the https certificate for the PC's current IP, starts the server, and opens the wall full-screen (Alt+F4 exits). The server window prints the iPad addresses — keep that window open.
+Double-click **`start.bat`**. It refreshes the https certificate for the PC's current IP, starts the server, and opens the wall in your default browser (press **F11** for full screen). The admin page is at `http://localhost:3000/admin/` — or double-click **`admin.bat`**; the PIN is in the server window. The server window prints the iPad addresses — keep that window open.
 
 ## First time on a new PC / new network
 
