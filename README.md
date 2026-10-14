@@ -79,7 +79,7 @@ Everything is stored in the `data\` folder and survives stopping/starting the se
 - No login: use only on your own private network. Contact details are only visible on the PIN-protected admin page.
 
 ## The "something is happening" effect
-When a new photo is submitted, the wall first plays a short effect: a teal-to-navy gradient (from the `mosaic.ai` artwork) drifts over the whole wall with a grid of face-scan icons that brighten in a diagonal wave, then fades away — and only then is the portrait revealed. It is built from the wall's own tiles and the screen size, so it looks the same on any screen shape or grid. The assets are `wall/fx/gradient.jpg` and `wall/fx/scan-icon.png`. No names are shown during a reveal.
+When a new photo is submitted, the wall first plays a short effect: a teal-to-navy gradient (from the `mosaic.ai` artwork) drifts over the wall's photos — which stay faintly visible through it — then fades away, and only then is the portrait revealed. It stretches to any screen shape. The asset is `wall/fx/gradient.jpg`. No names are shown during a reveal.
 
 ## The logo overlay
 The logos in `wall/overlays/` (“2026 · Proud of you”, “Proud of you”, DHA) are used only as masks, one after another: every ~22 s the photos behind the next logo's shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (The one other time colour appears: a freshly submitted photo is shown in colour in the big portrait during its reveal — never on the tiles.) Add, replace or delete PNGs in that folder to change the rotation (they play in file-name order) — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).

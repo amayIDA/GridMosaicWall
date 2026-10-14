@@ -417,46 +417,14 @@ function tintedTile(src, W, H, p, [tr, tg, tb]) {
   return cv;
 }
 
-/* ───── "something is happening": before a new portrait is revealed, a gradient and a grid of scanning faces sweep over the wall ─────
-   Everything is sized from the wall's own tiles and the screen, so it looks the same on any screen shape or grid. */
-const fxEl = $('#fx'), fxCanvas = $('#fxCanvas');
-let fxIconP = null;
-const loadFxIcon = () => fxIconP || (fxIconP = new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = 'fx/scan-icon.png'; }));
-
+/* ───── "something is happening": before a new portrait is revealed, a gradient drifts over the wall's photos, then fades away ───── */
+const fxEl = $('#fx');
 async function playFx() {                              // resolves once it has faded away again
   if (reduce) return;
-  const icon = await loadFxIcon();
-  positions();
-  const vw = innerWidth, vh = innerHeight, dpr = Math.min(devicePixelRatio || 1, 1.5);
-  fxCanvas.width = Math.round(vw * dpr); fxCanvas.height = Math.round(vh * dpr);
-  const g = fxCanvas.getContext('2d');
-  const tiles = cells.filter(c => c.x > -cw && c.y > -ch && c.x < vw && c.y < vh);
-  const isz = Math.min(cw, ch) * .64;
-  const IN = 1000, HOLD_MS = 2800, OUT = 1200;
-  fxEl.classList.add('run'); void fxEl.offsetWidth; fxEl.classList.add('show');           // the gradient layers fade in through CSS
-  const t0 = performance.now();
-  await new Promise(res => {
-    let leaving = false;
-    const step = now => {
-      const t = now - t0;
-      const env = t < IN ? t / IN : t < IN + HOLD_MS ? 1 : Math.max(0, 1 - (t - IN - HOLD_MS) / OUT);
-      if (!leaving && t >= IN + HOLD_MS) { leaving = true; fxEl.classList.remove('show'); }
-      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, fxCanvas.width, fxCanvas.height); g.scale(dpr, dpr);
-      g.globalAlpha = .3 * env; g.strokeStyle = '#fff'; g.lineWidth = 1; g.beginPath();      // the grid
-      for (const c of tiles) g.rect(c.x + .5, c.y + .5, cw, ch);
-      g.stroke();
-      const s = t / 1000;
-      for (const c of tiles) {                         // a face-scan icon in every tile, brightening in a diagonal wave
-        const cx = c.x + cw / 2, cy = c.y + ch / 2;
-        const wave = .5 + .5 * Math.sin(((cx / vw) * .75 + (cy / vh) * .55) * 2.6 * Math.PI * 2 - s * 1.5 * Math.PI * 2);
-        g.globalAlpha = env * (.3 + .5 * wave);
-        g.drawImage(icon, cx - isz / 2, cy - isz / 2, isz, isz);
-      }
-      if (t < IN + HOLD_MS + OUT) requestAnimationFrame(step); else res();
-    };
-    requestAnimationFrame(step);
-  });
-  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+  fxEl.classList.add('run'); void fxEl.offsetWidth; fxEl.classList.add('show');          // fade in (CSS)…
+  await wait(1000 + 2800);                                                              // …drift for a moment…
+  fxEl.classList.remove('show');                                                        // …and fade away
+  await wait(1200);
   fxEl.classList.remove('run');
 }
 
