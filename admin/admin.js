@@ -97,7 +97,7 @@ removedToggle.addEventListener('click', () => {
 });
 
 /* ───── wall layout (columns / rows / background) ───── */
-let settings = { cols: 0, rows: 0, fill: 'photos', overlayEvery: 22, revealHold: 5 }, saveTimer = 0;
+let settings = { cols: 0, rows: 0, fill: 'photos', overlayEvery: 22, revealHold: 2 }, saveTimer = 0;
 const FILL_HINT = {
   photos: 'Tiles that nobody has claimed repeat the registered photos. With nobody registered yet they stay empty.',
   faces: 'Tiles that nobody has claimed show generated illustrated faces.',
@@ -111,7 +111,7 @@ function paintSettings() {
   colsOut.textContent = settings.cols || 'Auto'; rowsOut.textContent = settings.rows || 'Auto';
   tilesEl.textContent = settings.cols && settings.rows ? `${settings.cols} × ${settings.rows} = ${settings.cols * settings.rows} tiles on screen`
     : settings.cols || settings.rows ? 'One side fits the screen automatically' : 'Fits the screen';
-  const rh = settings.revealHold || 5; holdEl.value = Math.min(rh, 30); holdOut.textContent = rh + ' s';
+  const rh = settings.revealHold || 2; holdEl.value = Math.min(rh, 30); holdOut.textContent = rh + ' s';
   const oe = settings.overlayEvery === undefined ? 22 : settings.overlayEvery;
   ovOff.checked = oe === 0; ovEvery.disabled = oe === 0;
   if (oe) ovEvery.value = Math.min(oe, 180);

@@ -52,7 +52,7 @@ const adminPerson = r => ({ ...publicPerson(r), email: r.email, mobile: r.mobile
 let config = {};
 try { config = JSON.parse(fs.readFileSync(CONF, 'utf8')); } catch (e) {}
 if (process.env.ADMIN_PIN) config.adminPin = String(process.env.ADMIN_PIN);
-const DEFAULT_SETTINGS = { cols: 0, rows: 0, fill: 'photos', overlayEvery: 22, revealHold: 5 };       // 0 = fit the screen automatically
+const DEFAULT_SETTINGS = { cols: 0, rows: 0, fill: 'photos', overlayEvery: 22, revealHold: 2 };       // 0 = fit the screen automatically
 config.settings = { ...DEFAULT_SETTINGS, ...(config.settings || {}) };
 config.seq = +config.seq || 0;
 const saveConfig = () => fs.writeFileSync(CONF, JSON.stringify(config, null, 2));
@@ -145,7 +145,7 @@ async function admin(req, res, p) {
     const fill = b.fill === undefined ? config.settings.fill : b.fill;
     const overlayEvery = b.overlayEvery === undefined ? config.settings.overlayEvery : int(b.overlayEvery, 5, 600);
     const revealHold = b.revealHold === undefined ? config.settings.revealHold : Math.round(+b.revealHold);
-    if (!(revealHold >= 2 && revealHold <= 60)) return send(res, 422, { error: 'Invalid settings' });
+    if (!(revealHold >= 1 && revealHold <= 60)) return send(res, 422, { error: 'Invalid settings' });
     if (cols === null || rows === null || overlayEvery === null || !['photos', 'faces', 'plain'].includes(fill)) return send(res, 422, { error: 'Invalid settings' });
     config.settings = { cols, rows, fill, overlayEvery, revealHold }; saveConfig();
     broadcast({ type: 'settings', settings: config.settings });

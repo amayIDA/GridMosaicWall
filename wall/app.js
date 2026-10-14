@@ -30,7 +30,7 @@ const ROLES = ['Architect','Photographer','Cellist','Marine biologist','Chef','T
 const CITIES = ['Kyoto','Lagos','Lisbon','Mumbai','Oslo','São Paulo','Nairobi','Seoul','Istanbul','Mexico City','Cape Town','Reykjavík','Tbilisi','Hanoi','Lima','Montréal','Cairo','Perth','Marseille','Jakarta'];
 
 /* wall settings, set from the admin page: columns × rows (0 = fit the screen) and what fills the tiles */
-let S = { cols: 0, rows: 0, fill: 'photos', revealHold: 5 };
+let S = { cols: 0, rows: 0, fill: 'photos', revealHold: 2 };
 const registered = [];
 const persons = [];
 const hashStr = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
@@ -496,7 +496,7 @@ async function reveal(k, fresh = false) {
   revealed.add(k);
 
   if (HOLD) return;
-  await wait(T(Math.max(2, +S.revealHold || 5) * 1000));                              // how long the revealed photo stays — set on the admin page
+  await wait(T(Math.max(1, +S.revealHold || 2) * 1000));                              // how long the revealed photo stays — set on the admin page
 
   // 3 · the portrait dissolves, the grid returns, the tiles flip back
   portrait.classList.remove('show'); sIn.classList.remove('show'); sOut.classList.remove('show');
