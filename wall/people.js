@@ -15,7 +15,7 @@
   THE LOGO OVERLAY
   ----------------
   The images in wall/overlays/ are never shown as pictures. Every so often the SHAPE of the next one
-  is used as a window: the photos behind it fade into colour and glow, the rest of the wall dims,
+  is used as a spotlight: the photos inside it are lifted and glow, the rest of the wall dims, a sheen sweeps across,
   then it fades away — and the following logo takes its turn (they rotate in file-name order).
   To change them, add / replace / delete PNGs in wall/overlays/ (transparent background works best;
   an opaque image on a light background also works). No restart needed. The src list below is only
@@ -35,7 +35,7 @@
       { name: 'Ada Lovelace', role: 'Mathematician · London', photo: 'photos/ada.jpg' },
 */
 window.MOSAIC = {
-  overlay: { src: ['overlays/2-proud-of-you-2026.png', 'overlays/3-proud-of-you.png', 'overlays/4-dha.png'], first: 6, every: 22, hold: 3, dim: 0.42, glow: 0.14 },   // seconds: first appearance, pause between, colour hold · dim = how dark outside the logo (0–1) · glow = how much brighter inside
+  overlay: { src: ['overlays/2-proud-of-you-2026.png', 'overlays/3-proud-of-you.png', 'overlays/4-dha.png'], first: 6, every: 22, hold: 3, dim: 0.6, glow: 0.1 },   // seconds: first appearance, pause between, colour hold · dim = how dark outside the logo (0–1) · glow = how much brighter inside
   photos: { dir: 'photos/', count: 0, ext: 'jpg', start: 1 },
   people: [
     // { name: 'Ada Lovelace', role: 'Mathematician · London', photo: 'photos/ada.jpg' },

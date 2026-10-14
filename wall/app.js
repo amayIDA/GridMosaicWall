@@ -204,7 +204,7 @@ let offset = 0, speed = 0, brake = true, idleOn = false, revealing = false, last
 
 function grayFor(k) {
   let u = grays.get(k);
-  if (!u) { u = grayURL(drawPortrait(persons[k].seed, 96)); grays.set(k, u); }
+  if (!u) { u = drawPortrait(persons[k].seed, 96).toDataURL('image/jpeg', .86); grays.set(k, u); }
   return u;
 }
 function styleImg(img, p) {
@@ -217,8 +217,7 @@ function setFront(c) {
   img.className = ''; img.onerror = null;
   if (p.plain) { img.removeAttribute('src'); return; }
   if (p.tile) {
-    img.classList.add('photo');                                                          // tiles are always black & white — a submitted photo is in colour only in the big portrait of its reveal
-    img.onerror = () => { img.onerror = null; img.classList.remove('photo'); p.tile = null; img.src = grayFor(c.k); };
+    img.onerror = () => { img.onerror = null; p.tile = null; img.src = grayFor(c.k); };
     img.src = p.tile;
   } else img.src = grayFor(c.k);
   styleImg(img, p);
@@ -408,7 +407,7 @@ function tintedTile(src, W, H, p, [tr, tg, tb]) {
   const m = (R / n) || 1;                                                            // the tile's brightness…
   const gr = clamp(tr / m, .45, 2.4), gg = clamp(tg / m, .45, 2.4), gb = clamp(tb / m, .45, 2.4), k = .18;   // …re-coloured to the portrait's colour there
   for (let i = 0; i < a.length; i += 4) {
-    const y = a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114;                       // the (black & white) tile photo supplies the detail
+    const y = a[i] * .299 + a[i + 1] * .587 + a[i + 2] * .114;                       // the tile photo supplies the detail
     a[i] = Math.min(255, y * gr) * (1 - k) + tr * k;
     a[i + 1] = Math.min(255, y * gg) * (1 - k) + tg * k;
     a[i + 2] = Math.min(255, y * gb) * (1 - k) + tb * k;
@@ -500,7 +499,7 @@ async function reveal(k, fresh = false) {
   if (HOLD) return;
   await wait(T(4200));
 
-  // 3 · the portrait dissolves, the grid returns, the tiles flip back to black & white (except theirs)
+  // 3 · the portrait dissolves, the grid returns, the tiles flip back
   portrait.classList.remove('show'); sIn.classList.remove('show'); sOut.classList.remove('show');
   flipMany([...inCells, c], false, o => (1 - (o.dist === undefined ? 0 : o.dist)) * 800);
   await wait(T(2300));
@@ -510,10 +509,10 @@ async function reveal(k, fresh = false) {
   brake = false; revealing = false; idleOn = true; idleTick();
 }
 
-/* ───── idle: the logo appears as a window of colour onto the black & white wall ─────
+/* ───── idle: a logo-shaped spotlight — the wall dims everywhere except inside the logo, which is lifted and glows ─────
    wall/overlay.png is never drawn itself — only its shape is used, as a mask over colour versions of the photos behind it. */
-const OV = Object.assign({ src: ['overlays/2-proud-of-you-2026.png'], every: 22, hold: 3, first: 6, dim: .42, glow: .14 }, CFG.overlay || {});
-const colorLayer = $('#colorLayer');
+const OV = Object.assign({ src: ['overlays/2-proud-of-you-2026.png'], every: 22, hold: 3, first: 6, dim: .6, glow: .1 }, CFG.overlay || {});
+const colorLayer = $('#colorLayer'), ovWrap = $('#ovWrap'), shine = $('#shine');
 let ovTimer = 0, ovBusy = false, ovStarted = false, ovIndex = 0;
 
 async function overlaySources() {                     // every image in wall/overlays/, falling back to the list in people.js
@@ -565,14 +564,30 @@ async function renderColorLayer(img) {                 // colour photos inside t
   });
   tg.restore();
   const mask = makeMask(img, W, H);
-  tg.globalCompositeOperation = 'destination-in'; tg.drawImage(mask, 0, 0);          // colour photos, only inside the logo
-  g.fillStyle = 'rgba(2,2,4,' + OV.dim + ')'; g.fillRect(0, 0, W, H);                // darken everything…
-  g.globalCompositeOperation = 'destination-out'; g.drawImage(mask, 0, 0);          // …except inside the logo
-  g.globalCompositeOperation = 'source-over'; g.drawImage(tiles, 0, 0);
-  g.globalCompositeOperation = 'lighter'; g.globalAlpha = OV.glow; g.drawImage(tiles, 0, 0);   // and a touch brighter in there
+  tg.globalCompositeOperation = 'destination-in'; tg.drawImage(mask, 0, 0);          // the photos, only inside the logo
+  // outside the logo: a deep, slightly cool veil, darkest where the vignette already is
+  g.fillStyle = `rgba(3,5,12,${OV.dim})`; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'destination-out'; g.drawImage(mask, 0, 0);          // …with the logo cut out of it
+  // inside the logo: the same photos, lifted — brighter, a touch more vivid
+  g.globalCompositeOperation = 'source-over';
+  if ('filter' in g) g.filter = 'saturate(1.18) brightness(1.1) contrast(1.04)';
+  g.drawImage(tiles, 0, 0); if ('filter' in g) g.filter = 'none';
+  g.globalCompositeOperation = 'lighter'; g.globalAlpha = OV.glow; g.drawImage(tiles, 0, 0);       // additive lift
+  // a soft halo of light just around the logo's edge (only the blurred shadow of a white copy is drawn)
+  const shape = document.createElement('canvas'); shape.width = W; shape.height = H;
+  const sg = shape.getContext('2d'); sg.fillStyle = '#fff'; sg.fillRect(0, 0, W, H); sg.globalCompositeOperation = 'destination-in'; sg.drawImage(mask, 0, 0);
+  const halo = document.createElement('canvas'); halo.width = W; halo.height = H;
+  const hg = halo.getContext('2d');
+  hg.shadowColor = 'rgba(170,230,255,1)'; hg.shadowBlur = 12 * dpr; hg.shadowOffsetX = W + 200;
+  hg.drawImage(shape, -(W + 200), 0);
+  hg.shadowColor = 'transparent'; hg.shadowBlur = 0; hg.shadowOffsetX = 0;
+  hg.globalCompositeOperation = 'destination-out'; hg.drawImage(mask, 0, 0);          // keep the glow outside the letters, so the photos inside stay clear
+  g.globalAlpha = .5; g.drawImage(halo, 0, 0);
   g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  const url = mask.toDataURL('image/png');                                            // the same shape masks the sheen that sweeps across
+  shine.style.webkitMaskImage = shine.style.maskImage = `url(${url})`;
 }
-const hideOverlay = () => colorLayer.classList.remove('show');
+const hideOverlay = () => ovWrap.classList.remove('show');
 async function pulse() {
   if (ovBusy || !idleOn || revealing || document.hidden || !cells.length) return;
   ovBusy = true;
@@ -580,8 +595,8 @@ async function pulse() {
     const img = await loadOverlay(); if (!img) return;
     await renderColorLayer(img);
     if (!idleOn || revealing) return;
-    colorLayer.classList.add('show'); await wait(T(1700 + OV.hold * 1000));        // colour fades in through the logo, holds…
-    colorLayer.classList.remove('show'); await wait(T(1800));                       // …and fades away again
+    ovWrap.classList.add('show'); await wait(T(1800 + OV.hold * 1000));            // the spotlight fades up, a sheen crosses it, it holds…
+    ovWrap.classList.remove('show'); await wait(T(1900));                           // …and fades away again
   } finally { ovBusy = false; }
 }
 let ovGen = 0;
@@ -621,7 +636,7 @@ function onRemove(id) {                                // taken off the wall fro
       persons[k] = fillPerson(k); revealed.delete(k);
       const c = cellByK[k]; if (!c) continue;
       c.peeking = false;
-      flipMany([c], false);                            // flip back to black & white, then swap the face underneath
+      flipMany([c], false);                            // flip back, then swap the face underneath
       setTimeout(() => refreshCell(c), 1500);
     }
   }).catch(console.error);

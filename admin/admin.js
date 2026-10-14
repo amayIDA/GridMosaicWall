@@ -98,7 +98,7 @@ removedToggle.addEventListener('click', () => {
 /* ───── wall layout (columns / rows / background) ───── */
 let settings = { cols: 0, rows: 0, fill: 'photos', overlayEvery: 22 }, saveTimer = 0;
 const FILL_HINT = {
-  photos: 'Tiles that nobody has claimed repeat the registered photos in black & white. With nobody registered yet they stay empty.',
+  photos: 'Tiles that nobody has claimed repeat the registered photos. With nobody registered yet they stay empty.',
   faces: 'Tiles that nobody has claimed show generated illustrated faces.',
   plain: 'Only registered people appear; every other tile is an empty frame.'
 };

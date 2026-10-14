@@ -4,7 +4,7 @@ Two apps served by one small server. **No install needed** — `runtime\node.exe
 
 | App | Where | What it does |
 |---|---|---|
-| **Wall** | on the PC: `http://localhost:3000/` | Full-screen black & white mosaic. Every so often a logo (from `wall/overlays/`) fades in as a window of colour; when someone registers, the wall forms their portrait as a collage. |
+| **Wall** | on the PC: `http://localhost:3000/` | Full-screen colour mosaic. Every so often a logo (from `wall/overlays/`) fades in as a spotlight; when someone registers, the wall forms their portrait as a collage. |
 | **Registration kiosk** | on the iPad: `https://<PC-IP>:3443/register/` | Just the camera (back camera by default, flip button for the front one): take a photo, tap **Put me on the wall**. No typing. |
 | **Admin** | on the PC: `http://localhost:3000/admin/` | See everyone on the wall, remove people (restorable), set the wall's **columns × rows** and background. Asks for the admin PIN. |
 
@@ -57,8 +57,8 @@ The same certificate authority is reused every run, so an iPad that has done thi
 Open `http://localhost:3000/admin/` and enter the **admin PIN** (printed in the server window every start; stored in `data/config.json`, or set `ADMIN_PIN` yourself).
 
 - Every person on the wall, with photo, name, email, mobile and join time. Search by name / email / mobile.
-- **Remove from wall** (tap twice): the tile flips back to black & white on the wall immediately. Nothing is destroyed — they move to **Removed**, where you can **Restore** them or **Delete forever**. A toast also offers **Undo**.
-- **Wall layout** (top of the page): a **Logo every** slider (seconds between logo overlays, or switch it Off), sliders for **Columns** and **Rows** (or leave on *Auto* to fit the screen), and the **Background** for tiles nobody has claimed — *Real photos* (the registered photos repeated in black & white), *Illustrations* (the generated vector faces), or *Empty*. Changes apply to the live wall within a second, with a fresh page-flip.
+- **Remove from wall** (tap twice): the tile flips back to a normal face on the wall immediately. Nothing is destroyed — they move to **Removed**, where you can **Restore** them or **Delete forever**. A toast also offers **Undo**.
+- **Wall layout** (top of the page): a **Logo every** slider (seconds between logo overlays, or switch it Off), sliders for **Columns** and **Rows** (or leave on *Auto* to fit the screen), and the **Background** for tiles nobody has claimed — *Real photos* (the registered photos repeated), *Illustrations* (the generated vector faces), or *Empty*. Changes apply to the live wall within a second, with a fresh page-flip.
 - Guests are named *Guest 001, 002 …* automatically. **Export CSV** downloads the list (name and time; contact columns are empty now that the kiosk doesn't ask for them).
 - Updates live as people register.
 
@@ -81,8 +81,8 @@ Everything is stored in the `data\` folder and survives stopping/starting the se
 ## The "something is happening" effect
 When a new photo is submitted, the wall first plays a short effect: a teal-to-navy gradient (from the `mosaic.ai` artwork) drifts over the wall's photos — which stay faintly visible through it — then fades away, and only then is the portrait revealed. It stretches to any screen shape. The asset is `wall/fx/gradient.jpg`. No names are shown during a reveal.
 
-## The logo overlay
-The logos in `wall/overlays/` (“2026 · Proud of you”, “Proud of you”, DHA) are used only as masks, one after another: every ~22 s the photos behind the next logo's shape fade into colour and glow a little brighter while the rest of the wall dims, then it all fades out. (The one other time colour appears: a freshly submitted photo is shown in colour in the big portrait during its reveal — never on the tiles.) Add, replace or delete PNGs in that folder to change the rotation (they play in file-name order) — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`).
+## The logo spotlight
+The logos in `wall/overlays/` (“2026 · Proud of you”, “Proud of you”, DHA) are used only as shapes, one after another: every ~22 s the wall dims everywhere except inside the next logo's shape, where the photos are lifted — brighter, a touch more vivid, with a soft glow around the edge — and a sheen sweeps across it before it all fades away. Add, replace or delete PNGs in that folder to change the rotation (they play in file-name order) — no restart needed. Timing and strength are in `wall/people.js` (`overlay: { first, every, hold, dim, glow }`; `dim` is how dark the rest of the wall gets, 0–1).
 
 ## Your own background faces
 Drop `1.jpg … N.jpg` in `wall/photos/` and set `photos.count` in `wall/people.js`.

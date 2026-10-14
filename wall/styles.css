@@ -30,7 +30,6 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
 .back{display:none}
 .tile.on .front{display:none}
 .tile.on .back{display:block}
-.front img.photo,.back img{filter:grayscale(1) contrast(1.06) brightness(.92)}
 .tile.plain .front{background:linear-gradient(160deg,#202024,#141416)}
 .tile.plain .front img{display:none}
 .tile.cz .back img{display:none}
@@ -47,9 +46,15 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
   animation:fold 1s var(--d,0ms) cubic-bezier(.3,.6,.3,1) both}
 @keyframes fold{from{opacity:.95}to{opacity:0}}
 
-/* colour seen only through the logo, fading in and out over the black & white wall */
-.colorlayer{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.7s ease}
-.colorlayer.show{opacity:1}
+/* the logo spotlight: the wall dims everywhere except inside the logo, which is lifted and glows; a sheen sweeps across it */
+.ovwrap{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity 1.8s cubic-bezier(.3,.6,.2,1)}
+.ovwrap.show{opacity:1}
+.colorlayer{position:absolute;inset:0;width:100%;height:100%}
+.shine{position:absolute;inset:0;overflow:hidden;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.shine i{position:absolute;top:-10%;bottom:-10%;left:-45%;width:45%;opacity:0;transform:translateX(0) skewX(-12deg);
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.28) 50%,transparent)}
+.ovwrap.show .shine i{animation:ovShine 2.8s .7s cubic-bezier(.45,.05,.25,1) both}
+@keyframes ovShine{0%{transform:translateX(0) skewX(-12deg);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(330%) skewX(-12deg);opacity:0}}
 
 /* ───────── focus: two flat dimming layers instead of fading hundreds of tiles ───────── */
 .scrim{position:absolute;z-index:4;pointer-events:none;opacity:0;background:rgba(5,5,6,.74);transition:opacity .9s ease}
