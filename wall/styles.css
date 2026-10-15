@@ -16,7 +16,16 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
 .stage::after{content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
   background:radial-gradient(ellipse 85% 80% at 50% 46%,transparent 55%,rgba(0,0,0,.45) 100%)}
 
-.wall{position:absolute;inset:0;overflow:hidden}
+.wall{position:absolute;inset:0;overflow:hidden;transition:opacity 1.2s cubic-bezier(.37,0,.63,1)}
+.stage.waiting .wall{opacity:0;pointer-events:none}
+.stage.waiting::after{opacity:0}
+.stage::after{transition:opacity 1.2s ease}
+
+/* full-screen artwork while nobody has been captured and the grid has no photos */
+.standby{position:absolute;inset:0;z-index:9;pointer-events:none;opacity:0;
+  background:#06303f url(fx/reveal.jpg) center / cover no-repeat;
+  transition:opacity 1.2s cubic-bezier(.37,0,.63,1)}
+.standby.on{opacity:1}
 .track{display:flex;flex-direction:column;gap:var(--gap);width:max-content;will-change:transform}
 .row{display:flex;gap:var(--gap);flex:none}
 

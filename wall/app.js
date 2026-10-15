@@ -4,7 +4,7 @@
 const CFG = Object.assign({ people: [] }, window.MOSAIC || {});
 const PH = Object.assign({ dir: 'photos/', count: 0, ext: 'jpg', start: 1 }, CFG.photos || {});
 const $ = s => document.querySelector(s);
-const stage = $('#stage'), wall = $('#wall'), portrait = $('#portrait');
+const stage = $('#stage'), wall = $('#wall'), portrait = $('#portrait'), standbyEl = $('#standby');
 
 const HOLD = /[?&]hold(=|&|$)/.test(location.search);            // dev aid: ?hold jumps to the portrait state and stays there
 const reduce = HOLD || matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -290,8 +290,26 @@ function positions() {                  // viewport position of every tile
   });
 }
 
+/* the grid is empty when nobody has been captured and tiles aren't filled with illustrated faces */
+function gridIsEmpty() { return !registered.length && S.fill !== 'faces'; }
+function showStandby(immediate) {
+  stage.classList.add('waiting');
+  if (immediate) standbyEl.style.transition = 'none';
+  standbyEl.classList.add('on');
+  if (immediate) { void standbyEl.offsetWidth; standbyEl.style.transition = ''; }
+  idleOn = false; brake = true; hideOverlay();
+}
+function hideStandby(immediate) {
+  if (immediate) standbyEl.style.transition = 'none';
+  standbyEl.classList.remove('on');
+  stage.classList.remove('waiting');
+  if (immediate) { void standbyEl.offsetWidth; standbyEl.style.transition = ''; }
+}
+
 async function boot() {
   build();
+  if (gridIsEmpty()) { showStandby(true); return; }
+  hideStandby(true);
   wall.style.visibility = 'hidden';
   await Promise.race([Promise.all(cells.slice(0, 400).map(c => c.front.getAttribute('src') ? c.front.decode().catch(() => {}) : 0)), wait(2500)]);
   wall.style.visibility = '';
@@ -422,7 +440,14 @@ const FX_IN = 2000, FX_HOLD = 1200, FX_OUT = 1200;
 let fxReady = null;
 const loadFx = () => fxReady || (fxReady = new Promise(res => { const im = new Image(); im.onload = () => (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(res); im.onerror = res; im.src = 'fx/reveal.jpg'; }));
 async function playFx() {                              // resolves once it has faded away again
-  if (reduce) return;
+  if (reduce) { if (standbyEl.classList.contains('on')) hideStandby(true); return; }
+  if (standbyEl.classList.contains('on')) {            // the artwork is already the empty-wall background
+    stage.classList.remove('waiting');                 // grid sits underneath, still covered
+    await wait(FX_IN + FX_HOLD);
+    standbyEl.classList.remove('on');
+    await wait(FX_OUT);
+    return;
+  }
   await loadFx();                                      // decoded first, so the fade is never a pop
   fxEl.classList.add('run'); void fxEl.offsetWidth; fxEl.classList.add('show');          // 2 s fade in (CSS)…
   await wait(FX_IN + FX_HOLD);
@@ -511,6 +536,7 @@ async function reveal(k, fresh = false) {
   await wait(T(60));
   for (const o of inCells) { if (o.cv) o.cv.remove(); o.cv = null; o.el.classList.remove('cz'); }
   brake = false; revealing = false; idleOn = true; idleTick();
+  if (!ovStarted) { ovStarted = true; overlayLoop(true); }
 }
 
 /* ───── idle: a logo-shaped spotlight — the wall dims everywhere except inside the logo, which is lifted and glows ─────
@@ -643,6 +669,7 @@ function onRemove(id) {                                // taken off the wall fro
       flipMany([c], false);                            // flip back, then swap the face underneath
       setTimeout(() => refreshCell(c), 1500);
     }
+    if (gridIsEmpty()) showStandby(false);
   }).catch(console.error);
 }
 
@@ -655,7 +682,9 @@ function applySettings(next) {
   queue = queue.then(async () => {                     // new grid or background: rebuild with a fresh page-flip
     while (revealing) await wait(300);
     clearPeeks(); persons.length = 0; appliedRegistered = false; revealed.clear();
-    build(); intro();
+    build();
+    if (gridIsEmpty()) showStandby(true);
+    else { hideStandby(true); intro(); }
   }).catch(console.error);
 }
 
